@@ -1,53 +1,23 @@
-'use client'
+'use client';
 
-import { useState, FormEvent, ChangeEvent } from 'react'
-import { useRouter } from 'next/navigation'
-import RecipeCard from '../components/RecipeCard'
-import { v4 as uuidv4 } from 'uuid' 
+import { useState } from 'react';
 
-// 1. Tipagem da Receita (Usada apenas para o mock inicial)
-interface Recipe {
-  id: string
-  title: string
-  image: string
-}
+export default function HomePage() {
+  const [ingredients, setIngredients] = useState('');
+  const [recipe, setRecipe] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-const MOCK_RECIPES: Recipe[] = [
-  // IDs únicos para a lista de mock
-  { id: uuidv4(), title: 'Macarrão ao Alho e Óleo', image: '/recipe-card.png' },
-  { id: uuidv4(), title: 'Sopa de Cebola', image: '/recipe-card.png' },
-  { id: uuidv4(), title: 'Risoto de Legumes', image: '/recipe-card.png' },
-  { id: uuidv4(), title: 'Omelete de Queijo', image: '/recipe-card.png' },
-  { id: uuidv4(), title: 'Salada Mediterrânea', image: '/recipe-card.png' },
-  { id: uuidv4(), title: 'Frango com Alho e Ervas', image: '/recipe-card.png' }
-]
-
-export default function Home() {
-  const router = useRouter() // 2. Hook para navegação programática
-  
-  // 3. Tipagem e Estados
-  const [ingredients, setIngredients] = useState<string>('')
-  const [recipes] = useState<Recipe[]>(MOCK_RECIPES)
-  const [isLoading, setIsLoading] = useState<boolean>(false) // Estado de Loading
-  const [error, setError] = useState<string | null>(null) // Estado de Erro
-
-  // 4. Handler de Input (mantido)
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setIngredients(e.target.value)
-    if (error) setError(null) // Limpa o erro ao digitar
-  }
-
-  // 5. Handler de Submissão (chamada à API)
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    setError(null)
-
-    if (ingredients.trim() === '') {
-      setError('Por favor, adicione pelo menos um ingrediente.')
-      return
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!ingredients.trim()) {
+      setError('Por favor, insira pelo menos um ingrediente.');
+      return;
     }
 
-    setIsLoading(true)
+    setLoading(true);
+    setError('');
+    setRecipe('');
 
     try {
       const response = await fetch('/api/generate-recipe', {
@@ -56,84 +26,77 @@ export default function Home() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ ingredients }),
-      })
+      });
 
-      // 6. Tratamento de Erros da Resposta da API
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Erro ao gerar receita pela IA.')
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json()
-
-      // 7. Navegação para a rota dinâmica da receita
-      router.push(`/recipes/${data.slug}`)
-      
-      setIngredients('') // Limpa o input após o sucesso
-    } catch (err) {
-      // 8. Captura e exibe erros de rede ou processamento
-      if (err instanceof Error) {
-        setError(err.message)
-      } else {
-        setError('Ocorreu um erro desconhecido ao tentar se conectar ao Chef IA.')
-      }
+      const data = await response.json();
+      setRecipe(data.recipe);
+    } catch (e) {
+      console.error(e);
+      setError(
+        'Oops! Algo deu errado ao gerar sua receita. Tente novamente.',
+      );
     } finally {
-      setIsLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <section className="p-8 max-w-6xl mx-auto">
-      {/* Título e Slogan (mantidos do branding) */}
-      <h2 className="text-4xl font-display font-black mb-4 text-center text-primary">
-        Vamos transformar o que você tem na geladeira?
-      </h2>
-      <p className="mb-8 text-center text-text-base text-lg font-body">
-        Sua despensa, infinitas receitas. Geradas por IA.
-      </p>
+    <div className="container mx-auto px-4 py-12">
+      <section className="text-center mb-12">
+        <h1 className="font-display font-bold text-4xl md:text-5xl text-brand-charcoal mb-4">
+          Sua despensa, infinitas receitas.
+        </h1>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Diga-nos o que você tem em casa e nossa IA criará uma receita deliciosa
+          e exclusiva para você. Chega de desperdício, olá criatividade!
+        </p>
+      </section>
 
-      <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4 mb-12 justify-center">
-        <input
-          type="text"
-          placeholder="Ex: Cebola, Alho, Tomate"
-          value={ingredients}
-          onChange={handleInputChange}
-          className="border p-3 rounded flex-1 focus:outline-none focus:ring-4 focus:ring-primary focus:border-transparent font-body text-text-base disabled:opacity-75"
-          disabled={isLoading} // 9. Desabilita o input durante o loading
-        />
-        <button
-          type="submit"
-          className="bg-primary text-white p-3 rounded hover:bg-secondary transition font-display font-bold uppercase tracking-wider disabled:bg-gray-500 disabled:cursor-not-allowed flex items-center justify-center min-w-[200px]"
-          disabled={isLoading} // 10. Desabilita o botão durante o loading
-        >
-          {isLoading ? (
-            // 11. Feedback visual de Loading
-            <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Processando...
-            </span>
-          ) : (
-            'Procurar Receitas'
-          )}
-        </button>
-      </form>
+      <section className="max-w-xl mx-auto">
+        <form onSubmit={handleSubmit} className="bg-brand-white p-8 rounded-lg shadow-lg">
+          <label
+            htmlFor="ingredients"
+            className="block font-display font-semibold text-lg text-brand-charcoal mb-2"
+          >
+            Quais ingredientes você tem aí?
+          </label>
+          <textarea
+            id="ingredients"
+            name="ingredients"
+            value={ingredients}
+            onChange={(e) => setIngredients(e.target.value)}
+            rows={4}
+            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-primary focus:border-transparent transition"
+            placeholder="Ex: peito de peru, requeijão, macarrão..."
+            disabled={loading}
+          />
+          <button
+            type="submit"
+            className="w-full mt-6 bg-brand-primary text-brand-white font-display font-bold text-lg py-3 px-6 rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary transition-transform transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            disabled={loading}
+          >
+            {loading ? 'Gerando sua obra-prima...' : 'Gerar Receita'}
+          </button>
+          {error && <p className="text-status-error mt-4 text-center">{error}</p>}
+        </form>
+      </section>
 
-      {/* 12. Exibição de Erros */}
-      {error && (
-        <div className="text-center mb-6 p-3 bg-primary/10 border border-primary text-primary rounded-lg font-body">
-          {error}
-        </div>
+      {recipe && (
+        <section className="mt-12 max-w-2xl mx-auto">
+          <h2 className="font-display font-bold text-3xl text-center text-brand-charcoal mb-6">
+            Sua Receita Exclusiva!
+          </h2>
+          <div className="bg-brand-white p-8 rounded-lg shadow-lg prose max-w-none">
+            {recipe.split('\n').map((line, index) => (
+              <p key={index}>{line}</p>
+            ))}
+          </div>
+        </section>
       )}
-
-      {/* Exibição da Lista de Receitas (Mock) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {recipes.map((recipe) => (
-          <RecipeCard key={recipe.id} title={recipe.title} image={recipe.image} />
-        ))}
-      </div>
-    </section>
-  )
+    </div>
+  );
 }

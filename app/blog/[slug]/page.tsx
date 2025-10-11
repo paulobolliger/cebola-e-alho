@@ -1,108 +1,70 @@
-// app/blog/[slug]/page.tsx
+import { supabase } from '@/lib/supabaseClient';
+import type { Post } from '@/types';
+import { notFound } from 'next/navigation';
+import Image from 'next/image';
 
-import { notFound } from 'next/navigation'
-import Image from 'next/image'
-import { Metadata } from 'next'
-import Link from 'next/link'
-import { clientSupabase } from '@/lib/supabaseClient' // 1. Uso do cliente público
-
-// 2. Tipagem de dados para o Post (Ajustada para o Banco)
-interface BlogPost {
-    id: string;
-    title: string;
+interface PostPageProps {
+  params: {
     slug: string;
-    image_url: string; // Coluna do banco
-    author: string;
-    content: string; // Conteúdo HTML completo (do CMS)
-    created_at: string;
+  };
 }
 
-// 3. Função de busca de dados (Server Component)
-async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
-  // Busca no Supabase usando o slug
-  const { data: post, error } = await clientSupabase
+// Revalidate the page every hour to fetch potential updates
+export const revalidate = 3600;
+
+async function getPost(slug: string) {
+  const { data, error } = await supabase
     .from('posts')
-    .select('id, title, slug, image_url, author, content, created_at')
+    .select('*')
     .eq('slug', slug)
-    .single()
+    .single();
 
-  if (error || !post) {
-    return null
+  if (error || !data) {
+    notFound();
   }
-  
-  return {
-    ...post,
-    image_url: post.image_url || '/blog-card.png'
-  } as BlogPost
+
+  return data as Post;
 }
 
-// 4. Tipagem dos Props e Geração de Metadados Dinâmicos
-interface BlogPostPageProps {
-  params: { slug: string }
+// Generate static pages for existing posts at build time for better performance
+export async function generateStaticParams() {
+  const { data: posts } = await supabase.from('posts').select('slug');
+  return posts?.map(({ slug }) => ({ slug })) || [];
 }
 
-export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
-  const post = await getBlogPostBySlug(params.slug)
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('pt-BR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+};
 
-  if (!post) {
-    return { title: 'Post não encontrado | Blog Cebola & Alho' }
-  }
-
-  return {
-    title: `${post.title} | Blog Cebola & Alho`,
-    description: `Leia o post de ${post.author} sobre ${post.title}.`,
-    keywords: ['blog', 'cebola', 'alho', 'gastronomia', 'dicas', post.slug],
-    openGraph: { images: [{ url: post.image_url }] },
-  }
-}
-
-// 5. Componente Principal (Server Component)
-export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const post = await getBlogPostBySlug(params.slug)
-  
-  if (!post) {
-    notFound()
-  }
+export default async function PostPage({ params }: PostPageProps) {
+  const post = await getPost(params.slug);
 
   return (
-    <section className="p-8 max-w-4xl mx-auto">
-      <article className="bg-background-light p-0 rounded-xl">
-        
-        {/* Imagem de Destaque */}
-        <div className="relative w-full h-80 mb-8 rounded-t-xl overflow-hidden shadow-lg">
-          <Image
-            src={post.image_url}
-            alt={post.title}
-            layout="fill"
-            objectFit="cover"
-            priority
-          />
-        </div>
+    <article className="container mx-auto px-4 py-12">
+      <header className="max-w-3xl mx-auto text-center mb-8">
+        <h1 className="font-display font-bold text-4xl md:text-5xl text-brand-charcoal mb-4">
+          {post.title}
+        </h1>
+        <p className="text-gray-500">{formatDate(post.created_at)}</p>
+      </header>
 
-        {/* Título e Meta */}
-        <div className="p-6">
-          <h1 className="text-4xl font-display font-black text-text-base mb-3">
-            {post.title}
-          </h1>
-          <p className="text-sm font-body text-gray-500 mb-6">
-            Por <span className="text-secondary font-bold">{post.author}</span> em {new Date(post.created_at).toLocaleDateString('pt-BR')}
-          </p>
-
-          {/* 6. Renderização do Conteúdo (Supondo que venha em formato HTML/Markdown) */}
-          <div 
-            className="prose max-w-none text-text-base font-body leading-relaxed" 
-            dangerouslySetInnerHTML={{ __html: post.content }} 
-          />
-        </div>
-
-      </article>
-      
-      {/* CTA de Retorno */}
-      <div className="text-center mt-12">
-        <Link href="/blog" className="inline-block bg-primary text-white p-4 rounded-lg hover:bg-secondary transition font-display font-bold text-lg uppercase tracking-wider shadow-lg">
-          ← Ver Todos os Posts do Blog
-        </Link>
+      <div className="relative h-64 md:h-96 w-full max-w-4xl mx-auto mb-12 rounded-lg overflow-hidden shadow-lg">
+        <Image
+          src={post.image_url || '/blog-card.png'}
+          alt={`Imagem de capa do post: ${post.title}`}
+          fill
+          style={{ objectFit: 'cover' }}
+          priority
+        />
       </div>
-    </section>
-  )
+
+      <div className="prose lg:prose-lg max-w-3xl mx-auto">
+        <p>{post.content}</p>
+      </div>
+    </article>
+  );
 }

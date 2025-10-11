@@ -1,32 +1,26 @@
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-  // Garantir que o Tailwind escaneie todos os arquivos .tsx e .ts (App Router)
-  content: [
-    "./app/**/*.{js,ts,jsx,tsx}",
-    "./components/**/*.{js,ts,jsx,tsx}"
-  ],
+import type { Config } from 'tailwindcss';
+
+const config: Config = {
   theme: {
     extend: {
-      // 1. Paleta de Cores "Fogo & Sabor Digital"
       colors: {
-        // Cores Principais e de Ação
-        'primary': '#D62800', // Vermelho Fogo (Paixão) - CTAs Primários
-        'secondary': '#F94C10', // Laranja Alquimia (Criatividade) - Destaques/Secundários
-        'accent': '#FFC300', // Amarelo Inovação (Luz) - Acentos/Ícones
-        
-        // Cores de Base e Fundo
-        'text-base': '#1C1C1C', // Preto Carvão (Base Tech) - Tipografia Principal
-        'background-light': '#FFFFFF', // Branco Digital - Fundo Primário
-        'background-soft': '#ECECEC', // Cinza Claro Neutro - Fundo Secundário
-        'footer-bg': '#1C1C1C', // Preto Carvão - Fundo do Footer
+        primary: '#D62800', // Vermelho Fogo (Paixão)
+        secondary: '#F94C10', // Laranja Alquimia (Criatividade)
+        accent: '#FFC300', // Amarelo Inovação (Luz)
+        'text-base': '#1C1C1C', // Preto Carvão (Base Tech)
+        'background-light': '#FFFFFF', // Branco Digital
+        'background-soft': '#ECECEC', // Cinza Claro Neutro
+        'footer-bg': '#1C1C1C', // Preto Carvão (Footer)
       },
-      // 2. Configuração de Fontes (Assumindo a instalação das fontes no próximo passo)
       fontFamily: {
-        // Exemplo de fontes: Usando 'sans' como fallback até a instalação
-        display: ['Poppins', 'sans-serif'], // Fonte para Títulos e Display
-        body: ['Roboto', 'sans-serif'],    // Fonte para Corpo de Texto
-      }
-    }
+        display: ['var(--font-display)', 'sans-serif'], // Poppins
+        body: ['var(--font-body)', 'sans-serif'], // Roboto
+      },
+    },
   },
-  plugins: [],
-}
+  plugins: [
+    require('@tailwindcss/typography')
+  ],
+};
+
+export default config;

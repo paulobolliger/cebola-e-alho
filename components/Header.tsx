@@ -1,38 +1,53 @@
-import Image from 'next/image'
-import Link from 'next/link'
+import Link from 'next/link';
+import Image from 'next/image';
 
-export default function Header() {
+const Header = () => {
   return (
-    // 1. Fundo com cor Primária, texto branco e sombra
-    <header className="bg-primary text-white p-4 shadow-xl">
-      <div className="max-w-6xl mx-auto flex justify-between items-center">
-        <Link href="/" className="flex items-center space-x-3 transition hover:opacity-90">
-          {/* 2. Logo da Chama Orgânica Estilizada */}
+    <header className="bg-brand-white shadow-md sticky top-0 z-50">
+      <div className="container mx-auto flex items-center justify-between p-4">
+        <Link href="/" className="flex items-center space-x-2">
           <Image
-            src="https://res.cloudinary.com/dhqvjxgue/image/upload/v1760212377/logo-ceboela-e-alho_qqrbpw.png"
-            alt="Cebola & Alho - Chama Orgânica"
+            src="/logo.png"
+            alt="Cebola & Alho Logo"
             width={40}
             height={40}
-            priority={true} // Prioridade no LCP
+            className="rounded-full"
           />
-          {/* 3. Título Principal com Fonte de Display */}
-          <h1 className="text-3xl font-display font-black tracking-tight">Cebola & Alho</h1>
+          <span className="font-display font-bold text-2xl text-brand-charcoal">
+            Cebola & Alho
+          </span>
         </Link>
-
-        {/* 4. Links de Navegação com Fonte de Corpo */}
-        <nav className="font-body space-x-6 text-lg">
-          {/* CORREÇÃO: Uso de Link para navegação interna */}
-          <Link href="/" className="hover:text-accent transition duration-200">
-            Home
-          </Link>
-          <Link href="/blog" className="hover:text-accent transition duration-200">
-            Blog
-          </Link>
-          <Link href="/about" className="hover:text-accent transition duration-200">
-            Sobre
-          </Link>
+        <nav>
+          <ul className="flex items-center space-x-6">
+            <li>
+              <Link
+                href="/"
+                className="font-display font-semibold text-brand-charcoal hover:text-brand-primary transition-colors duration-300"
+              >
+                Gerador de Receitas
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/blog"
+                className="font-display font-semibold text-brand-charcoal hover:text-brand-primary transition-colors duration-300"
+              >
+                Blog
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/about"
+                className="font-display font-semibold text-brand-charcoal hover:text-brand-primary transition-colors duration-300"
+              >
+                Sobre
+              </Link>
+            </li>
+          </ul>
         </nav>
       </div>
     </header>
-  )
-}
+  );
+};
+
+export default Header;

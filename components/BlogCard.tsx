@@ -1,47 +1,45 @@
-import Image from 'next/image'
-import Link from 'next/link'
+import Link from 'next/link';
+import Image from 'next/image';
+import type { Post } from '@/types';
 
-// 1. Tipagem das Props com o novo campo slug
 interface BlogCardProps {
-  title: string
-  excerpt: string
-  image: string
-  slug: string // Novo campo
+  post: Post;
 }
 
-export default function BlogCard({ title, excerpt, image, slug }: BlogCardProps) {
-  // 2. Remove a geração de slug desnecessária e usa o slug do banco
-  
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('pt-BR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+};
+
+const BlogCard = ({ post }: BlogCardProps) => {
   return (
-    // 3. Link usa o slug fornecido
-    <Link href={`/blog/${slug}`} className="block">
-      <div className="bg-background-light rounded-lg shadow-lg overflow-hidden transition-shadow duration-300 hover:shadow-2xl hover:scale-[1.02] transform">
-        {/* Uso de Next/Image para Performance */}
-        <div className="relative w-full h-40">
-          {image && (
-            <Image
-              src={image}
-              alt={`Imagem de capa do post: ${title}`}
-              layout="fill"
-              objectFit="cover"
-            />
-          )}
-        </div>
-        <div className="p-4">
-          {/* Título como h3, Fonte Display e Cor Base */}
-          <h3 className="font-display font-bold text-xl text-text-base mb-2 truncate">
-            {title}
-          </h3>
-          {/* Excerto com Fonte Corpo e Cor Base Suave */}
-          <p className="text-gray-600 text-sm mb-2 font-body leading-relaxed">
-            {excerpt}
-          </p>
-          {/* CTA com Cor Primária (Vermelho Fogo) para Paixão */}
-          <span className="text-primary font-display font-semibold hover:text-secondary transition">
-            Leia mais →
-          </span>
-        </div>
+    <Link
+      href={`/blog/${post.slug}`}
+      className="block bg-brand-white rounded-lg shadow-md overflow-hidden group transition-transform transform hover:-translate-y-2"
+    >
+      <div className="relative h-48 w-full">
+        <Image
+          src={post.image_url || '/blog-card.png'}
+          alt={`Imagem de capa do post: ${post.title}`}
+          fill
+          style={{ objectFit: 'cover' }}
+          className="transition-transform duration-500 group-hover:scale-110"
+        />
+      </div>
+      <div className="p-6">
+        <p className="text-sm text-gray-500 mb-2">{formatDate(post.created_at)}</p>
+        <h3 className="font-display font-bold text-xl text-brand-charcoal mb-3 group-hover:text-brand-primary transition-colors">
+          {post.title}
+        </h3>
+        <p className="text-gray-600 text-sm leading-relaxed">
+          {post.excerpt}
+        </p>
       </div>
     </Link>
-  )
-}
+  );
+};
+
+export default BlogCard;

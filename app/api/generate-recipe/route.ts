@@ -1,112 +1,85 @@
-// app/api/generate-recipe/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import OpenAI from 'openai';
+import { z } from 'zod';
 
-import { NextRequest, NextResponse } from 'next/server'
-import { serverSupabase } from '@/lib/supabaseClient' // 1. Uso do cliente Server-Side
-import { OpenAI } from 'openai' // 2. Importação do SDK da OpenAI
-import { v4 as uuidv4 } from 'uuid'
+// Initialize OpenAI client with the API key from environment variables
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-// 3. Inicialização do Cliente OpenAI (Apenas no Servidor)
-const openai = new OpenAI() 
+// Define a schema for input validation using Zod
+const recipeRequestSchema = z.object({
+  ingredients: z.string().min(3, 'Os ingredientes devem ter pelo menos 3 caracteres.'),
+});
 
-// Tipagem da estrutura de dados esperada no corpo da requisição
-interface RequestBody {
-  ingredients: string 
-}
+export async function POST(req: NextRequest) {
+  // 1. Securely get the API Key
+  if (!process.env.OPENAI_API_KEY) {
+    console.error('OPENAI_API_KEY is not set.');
+    return NextResponse.json(
+      { error: 'A configuração do servidor está incompleta.' },
+      { status: 500 },
+    );
+  }
 
-// 4. Tipagem da Receita (Estrutura de retorno da IA)
-interface RecipeResponse {
-  id: string;
-  title: string;
-  image: string;
-  slug: string;
-  description: string;
-  ingredients: string; // Lista de ingredientes formatada
-  instructions: string; // Passos formatados
-}
-
-// Handler da Rota POST
-export async function POST(request: NextRequest) {
   try {
-    const { ingredients }: RequestBody = await request.json()
+    const body = await req.json();
 
-    if (!ingredients || ingredients.trim() === '') {
+    // 2. Validate the input
+    const validationResult = recipeRequestSchema.safeParse(body);
+    if (!validationResult.success) {
       return NextResponse.json(
-        { message: "Por favor, forneça ingredientes válidos para a IA." }, 
-        { status: 400 }
-      )
+        { error: 'Entrada inválida.', details: validationResult.error.errors },
+        { status: 400 },
+      );
     }
+    const { ingredients } = validationResult.data;
 
-    // --- 5. CHAMADA À API DA OPENAI ---
-    const prompt = `Gere uma receita criativa e apetitosa usando os seguintes ingredientes: "${ingredients}". O tom deve ser de um "Cientista de Dados Gourmet" e "Chef Amigo". O retorno deve ser ESTRITAMENTE em JSON no formato { "title": "...", "description": "...", "ingredients": "item 1, item 2...", "instructions": "passo 1, passo 2..." }.`
+    // 3. Enhanced Prompt Engineering
+    const prompt = `
+      Você é um assistente culinário chamado "Cebola & Alho". Seu tom é de um "Chef Amigo": caloroso, acessível e inspirador.
+      Sua tarefa é criar uma receita deliciosa e simples usando principalmente os seguintes ingredientes: ${ingredients}.
+      Você pode adicionar ingredientes básicos como sal, pimenta, azeite, água, etc., se necessário.
 
-    const aiResponse = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" }, // Força o retorno JSON
-      temperature: 0.7, 
+      Por favor, estruture sua resposta usando Markdown da seguinte forma:
+
+      # [Nome Criativo e Saboroso para a Receita]
+
+      ## Ingredientes
+      - [Ingrediente 1 da lista fornecida]
+      - [Ingrediente 2 da lista fornecida]
+      - [Etc.]
+      - [Qualquer ingrediente básico que você adicionou]
+
+      ## Modo de Preparo
+      1. [Primeiro passo, claro e direto]
+      2. [Segundo passo]
+      3. [Continue com os passos necessários]
+
+      ## Dica do Chef
+      - [Uma dica ou sugestão para variar o prato ou uma técnica especial]
+    `;
+
+    // 4. Call the OpenAI API
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 500,
     });
 
-    const aiDataString = aiResponse.choices[0].message.content;
-    
-    if (!aiDataString) {
-        throw new Error("A IA não conseguiu gerar uma resposta válida.");
-    }
-    
-    // Parse da resposta e adição de campos do sistema
-    const recipeData: Omit<RecipeResponse, 'id' | 'image' | 'slug'> = JSON.parse(aiDataString);
-    
-    const title = recipeData.title;
-    const slug = title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '')
+    const recipe = completion.choices[0]?.message?.content?.trim() ?? '';
 
-    const finalRecipe = {
-        id: uuidv4(),
-        title: title,
-        slug: slug,
-        image: '/recipe-card.png', // Mock de imagem
-        ...recipeData
+    if (!recipe) {
+      throw new Error('A IA não retornou uma receita.');
     }
 
-    // --- 6. INSERÇÃO NO SUPABASE ---
-    // Insere todos os dados gerados pela IA no banco de dados
-    const { error } = await serverSupabase
-      .from('recipes') // Tabela que deve ser criada no Supabase
-      .insert({ 
-        id: finalRecipe.id,
-        slug: finalRecipe.slug, 
-        title: finalRecipe.title, 
-        description: finalRecipe.description,
-        // É recomendável que 'ingredients' e 'instructions' sejam JSONB arrays no Supabase
-        // Para simplificar, vou manter a string, mas isso é um ponto de melhoria futuro.
-        ingredients_string: finalRecipe.ingredients, 
-        instructions_string: finalRecipe.instructions,
-      })
-      .select()
-
-    if (error) {
-        // Erro de banco de dados
-        console.error("Erro ao inserir receita no Supabase:", error.message);
-        return NextResponse.json({ message: "Erro ao salvar a receita. Tente novamente." }, { status: 500 });
-    }
-    
-    // 7. Retorno de sucesso
-    return NextResponse.json(
-      { 
-        message: "Receita gerada e salva com sucesso!", 
-        slug: finalRecipe.slug 
-      }, 
-      { status: 200 }
-    )
-
+    return NextResponse.json({ recipe });
   } catch (error) {
-    // 8. Tratamento de erro robusto (incluindo erros da OpenAI)
-    console.error("Erro fatal na API de Geração de Receita:", error)
-    const errorMessage = error instanceof Error ? error.message : "Erro interno do servidor."
-
+    console.error('Error calling OpenAI API:', error);
     return NextResponse.json(
-      { 
-        message: `O Chef IA falhou ao criar a receita. ${errorMessage}`
-      }, 
-      { status: 500 }
-    )
+      { error: 'Não foi possível gerar a receita no momento.' },
+      { status: 500 },
+    );
   }
 }
