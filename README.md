@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🧅 Cebola & Alho
 
-## Getting Started
+![Cebola & Alho](https://raw.githubusercontent.com/paulobolliger/cebola-e-alho/main/public/logo.png)
 
-First, run the development server:
+**Cebola & Alho** é um site de receitas inteligente: você informa os ingredientes que tem em casa, e a IA sugere receitas deliciosas para cozinhar. Além disso, o site conta com blog de receitas, dicas culinárias e integração com anúncios para monetização.
+
+---
+
+## 🚀 Tecnologias Utilizadas
+
+- [Next.js](https://nextjs.org/)
+- [React](https://reactjs.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Vercel](https://vercel.com/) (deploy automático)
+- Potencial futura integração com IA para sugestões de receitas
+
+---
+
+## 🗂️ Estrutura do Projeto
+
+cebolaealho/
+├─ public/ # Imagens, favicon, logo
+├─ src/
+│ ├─ pages/ # Páginas do Next.js
+│ └─ components/ # Componentes reutilizáveis
+├─ package.json
+└─ tailwind.config.js
+
+
+
+---
+
+## 💻 Rodando Localmente
 
 ```bash
+git clone https://github.com/paulobolliger/cebola-e-alho.git
+cd cebola-e-alho
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+🚀 Deploy na Vercel
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+Conecte sua conta GitHub em Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Clique em New Project → selecione cebolaealho
 
-## Learn More
+Configure Framework Preset como Next.js
 
-To learn more about Next.js, take a look at the following resources:
+Clique em Deploy
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+O site ficará online em segundos (ex: https://cebolaealho.vercel.app)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+🔮 Próximos Passos
 
-## Deploy on Vercel
+Implementar API de receitas via IA
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Criar painel de CMS para o blog
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Integrar anúncios e SEO
+
+Melhorar UX e design responsivo
+
+📄 Licença
+
+MIT License © 2025 Paulo Bolliger
+
+🌟 Contato
+
+GitHub: paulobolliger
+
+Site: cebolaealho.com.br
