@@ -4,52 +4,49 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { Metadata } from 'next'
 import Link from 'next/link'
+import { clientSupabase } from '@/lib/supabaseClient' // 1. Uso do cliente público para leitura
 
-// 1. Definição da interface de dados da Receita
+// 2. Definição da interface de dados da Receita (Ajustada para a estrutura do banco)
 interface Recipe {
   id: string;
   title: string;
-  image: string;
+  slug: string;
+  image: string; // Assumindo que a imagem ainda é mockada
   description: string;
-  ingredients: string[];
-  instructions: string[];
+  // A API Route salva ingredientes/instruções como strings separadas
+  ingredients_string: string;
+  instructions_string: string;
 }
 
-// 2. Mock de dados para simular a busca
-const MOCK_RECIPE_DATA: Recipe = {
-  id: 'macarrao-ao-alho-e-oleo',
-  title: 'Macarrão ao Alho e Óleo com Toque de Limão Siciliano',
-  image: '/recipe-card.png',
-  description: "Este clássico foi refinado por nosso algoritmo, que sugeriu um toque de raspas de limão siciliano para elevar o frescor. Simples, rápido e incrivelmente saboroso, refletindo a essência da Alquimia da Cozinha Digital.",
-  ingredients: [
-    '200g de Macarrão Spaguetti (ou o que tiver)',
-    '1/2 xícara de azeite de oliva extra virgem',
-    '8 dentes de alho fatiados (a paixão do chef!)',
-    'Pimenta dedo-de-moça a gosto (opcional)',
-    'Salsinha fresca picada',
-    'Sal e pimenta do reino',
-    'Raspas de 1/2 limão siciliano (a sugestão da IA!)'
-  ],
-  instructions: [
-    'Cozinhe o macarrão em água e sal, reservando uma concha da água do cozimento.',
-    'Em uma frigideira grande, aqueça o azeite em fogo baixo e adicione o alho fatiado e a pimenta. Deixe dourar levemente. Não queime!',
-    'Adicione a água do cozimento reservada à frigideira. A emulsão criará um molho leve.',
-    'Escorra o macarrão e transfira-o para a frigideira.',
-    'Misture bem, polvilhe com a salsinha e as raspas de limão. Sirva imediatamente!'
-  ]
+// 3. Função de busca de dados (Server Component)
+async function getRecipeBySlug(slug: string): Promise<Recipe | null> {
+  // Chamada ao Supabase usando o cliente público (clientSupabase)
+  const { data, error } = await clientSupabase
+    .from('recipes')
+    .select('id, title, slug, image, description, ingredients_string, instructions_string') // Seleciona apenas as colunas necessárias
+    .eq('slug', slug)
+    .single()
+
+  if (error || !data) {
+    // console.error(error) // Log do erro de DB (apenas para debug)
+    return null
+  }
+
+  // Adiciona campo image mockado
+  return {
+    ...data,
+    image: data.image || '/recipe-card.png',
+  } as Recipe
 }
 
-// 3. Tipagem dos Props da Page (parâmetros dinâmicos)
+// 4. Tipagem dos Props da Page (parâmetros dinâmicos)
 interface RecipePageProps {
   params: { slug: string }
 }
 
-// 4. Função para gerar metadados dinâmicos (SEO - Server Component)
+// 5. Função para gerar metadados dinâmicos (SEO - Server Component)
 export async function generateMetadata({ params }: RecipePageProps): Promise<Metadata> {
-  const { slug } = params;
-  
-  // Aqui você faria a busca de dados via Supabase usando o slug
-  const recipe = slug === MOCK_RECIPE_DATA.id ? MOCK_RECIPE_DATA : null
+  const recipe = await getRecipeBySlug(params.slug)
 
   if (!recipe) {
     return {
@@ -61,26 +58,26 @@ export async function generateMetadata({ params }: RecipePageProps): Promise<Met
   return {
     title: `${recipe.title} | Cebola & Alho`,
     description: recipe.description,
-    // Palavras-chave alinhadas com o Branding Book
-    keywords: ['receita', 'cebola', 'alho', 'ia', slug, 'cozinha digital', 'alquimia culinária'],
+    keywords: ['receita', 'cebola', 'alho', 'ia', recipe.slug, 'cozinha digital', 'alquimia culinária'],
     openGraph: {
       images: [{ url: recipe.image }],
     },
   }
 }
 
-// 5. Componente principal (Server Component)
+// 6. Componente principal (Server Component)
 export default async function RecipePage({ params }: RecipePageProps) {
-  const { slug } = params
-
-  // Simulação de busca de dados
-  // No projeto real: const { data: recipe } = await supabase.from('recipes').select('*').eq('slug', slug).single()
-  const recipe = slug === MOCK_RECIPE_DATA.id ? MOCK_RECIPE_DATA : null
+  const recipe = await getRecipeBySlug(params.slug)
 
   if (!recipe) {
     // Redireciona para a página 404 nativa do Next.js
     notFound()
   }
+
+  // 7. Processamento das strings para exibição em lista
+  const ingredientsArray = recipe.ingredients_string.split(/\n|,/g).map(s => s.trim()).filter(s => s.length > 0)
+  const instructionsArray = recipe.instructions_string.split(/\n/g).map(s => s.trim()).filter(s => s.length > 0)
+
 
   return (
     <section className="p-8 max-w-5xl mx-auto">
@@ -118,7 +115,7 @@ export default async function RecipePage({ params }: RecipePageProps) {
               Ingredientes
             </h2>
             <ul className="space-y-3 font-body text-text-base text-lg list-disc list-inside">
-              {recipe.ingredients.map((item, index) => (
+              {ingredientsArray.map((item, index) => (
                 <li key={index}>{item}</li>
               ))}
             </ul>
@@ -130,7 +127,7 @@ export default async function RecipePage({ params }: RecipePageProps) {
               Modo de Preparo
             </h2>
             <ol className="space-y-4 font-body text-text-base text-lg list-decimal list-inside">
-              {recipe.instructions.map((step, index) => (
+              {instructionsArray.map((step, index) => (
                 <li key={index}>
                   <p className="inline pl-2">{step}</p>
                 </li>

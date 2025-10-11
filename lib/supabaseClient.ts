@@ -2,25 +2,31 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-// Variáveis de ambiente
+// --- 1. Variáveis de Ambiente ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const publicAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+// CHAVE SECRETA: Usada APENAS em API Routes ou Server Actions. Deve ser configurada no .env.local como SUPABASE_SERVICE_ROLE_KEY
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY 
 
-// 1. Verificação de ambiente em tempo de execução
-if (!supabaseUrl || !supabaseAnonKey) {
-  // Em um projeto real, isso deve ser um erro fatal para evitar falhas de runtime
-  console.error("ERRO: Variáveis de ambiente do Supabase (NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY) não estão definidas. Verifique seu arquivo .env.local.")
+// 2. Cliente Público (Para leituras em Server Components e Client Components)
+if (!supabaseUrl || !publicAnonKey) {
+  console.error("ERRO: As variáveis públicas do Supabase não estão definidas. Verifique seu .env.local.")
 }
 
-// 2. Criação do cliente Supabase tipado
-// (A tipagem <Database> é um placeholder para o seu types.ts gerado pelo Supabase CLI)
-// export const supabase = createClient<Database>(supabaseUrl as string, supabaseAnonKey as string)
-
-// Usando tipagem básica por enquanto:
-export const supabase = createClient(
+export const clientSupabase = createClient(
   supabaseUrl as string, 
-  supabaseAnonKey as string
+  publicAnonKey as string
 )
 
-// Nota: Para Server Components que exigem mais segurança (e que buscam dados com autenticação), 
-// o Next.js recomenda criar uma instância de cliente separada que gerencie cookies.
+
+// 3. Cliente Server-Side/Admin (Para API Routes, Escritas Seguras)
+// Usado na API de geração de receita. Não deve vazar para o frontend!
+export const serverSupabase = createClient(
+  supabaseUrl as string, 
+  serviceRoleKey as string, 
+  {
+    auth: {
+      persistSession: false // Desabilita sessões HTTP, pois não são necessárias para API Routes
+    }
+  }
+)

@@ -3,53 +3,46 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { Metadata } from 'next'
-import { supabase } from '@/lib/supabaseClient' // Importação do cliente Supabase
+import Link from 'next/link'
+import { clientSupabase } from '@/lib/supabaseClient' // 1. Uso do cliente público
 
-// 1. Tipagem de dados para o Post
+// 2. Tipagem de dados para o Post (Ajustada para o Banco)
 interface BlogPost {
     id: string;
     title: string;
     slug: string;
-    image: string;
+    image_url: string; // Coluna do banco
     author: string;
-    content: string;
+    content: string; // Conteúdo HTML completo (do CMS)
     created_at: string;
 }
 
-// 2. Mock de dados
-const MOCK_POST_DATA: BlogPost = {
-  id: '5-receitas-faceis-com-cebola',
-  title: '5 Receitas Fáceis com Cebola',
-  slug: '5-receitas-faceis-com-cebola',
-  image: '/blog-card.png',
-  author: 'Chef Amigo IA',
-  created_at: new Date().toISOString(),
-  content: `
-    <p>A cebola é o ingrediente secreto em 9 de 10 receitas deliciosas. Por que não dar a ela o merecido destaque? Nossos algoritmos analisaram milhares de pratos e simplificaram 5 clássicos que transformam a cebola, de coadjuvante a estrela principal. Seja criativo, seja eficiente!</p>
-    
-    <h3 class="text-2xl font-display font-bold text-secondary mt-8 mb-4">1. Sopa de Cebola Gratinada (A Elegância IA)</h3>
-    <p>Nossa versão usa um caldo de carne mais limpo para destacar o sabor da cebola caramelizada, um processo que o Chef Amigo adora. A precisão no tempo de cozimento é chave. Sirva com queijo Emmenthal gratinado.</p>
-    
-    <h3 class="text-2xl font-display font-bold text-secondary mt-8 mb-4">2. Anéis de Cebola Assados com Panko</h3>
-    <p>Fugindo da fritura (a IA preza pela saúde!), esta receita substitui a massa pesada por Panko e azeite de oliva. O resultado é um anel crocante, leve e cheio de sabor, perfeito para acompanhar um hambúrguer gourmet.</p>
-    
-    <h3 class="text-2xl font-display font-bold text-secondary mt-8 mb-4">3. Geleia de Cebola e Vinho Tinto</h3>
-    <p>Esta é a Alquimia da Cozinha Digital em ação: transformar a pungência da cebola em uma geleia agridoce, perfeita para queijos ou carnes. O vinho tinto (de preferência um Malbec) adiciona profundidade e calor.</p>
-  `
+// 3. Função de busca de dados (Server Component)
+async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+  // Busca no Supabase usando o slug
+  const { data: post, error } = await clientSupabase
+    .from('posts')
+    .select('id, title, slug, image_url, author, content, created_at')
+    .eq('slug', slug)
+    .single()
+
+  if (error || !post) {
+    return null
+  }
+  
+  return {
+    ...post,
+    image_url: post.image_url || '/blog-card.png'
+  } as BlogPost
 }
 
-// 3. Tipagem dos Props da Page
+// 4. Tipagem dos Props e Geração de Metadados Dinâmicos
 interface BlogPostPageProps {
   params: { slug: string }
 }
 
-// 4. Geração de Metadados Dinâmicos
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
-  const { slug } = params;
-
-  // Realizar a busca aqui (Substituir o Mock em Produção)
-  // const { data: post } = await supabase.from('posts').select('*').eq('slug', slug).single()
-  const post = slug === MOCK_POST_DATA.slug ? MOCK_POST_DATA : null
+  const post = await getBlogPostBySlug(params.slug)
 
   if (!post) {
     return { title: 'Post não encontrado | Blog Cebola & Alho' }
@@ -59,17 +52,13 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     title: `${post.title} | Blog Cebola & Alho`,
     description: `Leia o post de ${post.author} sobre ${post.title}.`,
     keywords: ['blog', 'cebola', 'alho', 'gastronomia', 'dicas', post.slug],
-    openGraph: { images: [{ url: post.image }] },
+    openGraph: { images: [{ url: post.image_url }] },
   }
 }
 
 // 5. Componente Principal (Server Component)
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const { slug } = params
-
-  // Realizar a busca (Substituir o Mock em Produção)
-  // const { data: post } = await supabase.from('posts').select('*').eq('slug', slug).single()
-  const post = slug === MOCK_POST_DATA.slug ? MOCK_POST_DATA : null
+  const post = await getBlogPostBySlug(params.slug)
   
   if (!post) {
     notFound()
@@ -82,7 +71,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         {/* Imagem de Destaque */}
         <div className="relative w-full h-80 mb-8 rounded-t-xl overflow-hidden shadow-lg">
           <Image
-            src={post.image}
+            src={post.image_url}
             alt={post.title}
             layout="fill"
             objectFit="cover"
@@ -99,7 +88,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             Por <span className="text-secondary font-bold">{post.author}</span> em {new Date(post.created_at).toLocaleDateString('pt-BR')}
           </p>
 
-          {/* Conteúdo (Renderizado via dangerouslySetInnerHTML - Atenção à Segurança) */}
+          {/* 6. Renderização do Conteúdo (Supondo que venha em formato HTML/Markdown) */}
           <div 
             className="prose max-w-none text-text-base font-body leading-relaxed" 
             dangerouslySetInnerHTML={{ __html: post.content }} 
@@ -108,7 +97,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
       </article>
       
-      {/* 6. CTA de Retorno */}
+      {/* CTA de Retorno */}
       <div className="text-center mt-12">
         <Link href="/blog" className="inline-block bg-primary text-white p-4 rounded-lg hover:bg-secondary transition font-display font-bold text-lg uppercase tracking-wider shadow-lg">
           ← Ver Todos os Posts do Blog

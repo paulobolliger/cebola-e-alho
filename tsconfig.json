@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "es2020",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -21,14 +25,17 @@
     ],
     // 1. Definição do Path Alias (@/) para importações limpas (corrigindo o problema do ../../../)
     "paths": {
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ]
     }
   },
   // 2. Inclui todos os arquivos TypeScript e JavaScript
   "include": [
-    "next-env.d.ts", 
-    "**/*.ts", 
-    "**/*.tsx"
+    "**/*.ts",
+    "**/*.tsx",
+    "next-env.d.ts",
+    ".next/types/**/*.ts"
   ],
   // 3. Exclui a pasta de módulos
   "exclude": [
