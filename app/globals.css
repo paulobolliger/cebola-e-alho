@@ -1,26 +1,26 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 1. Definição de Cores no Root para fallback ou uso customizado */
+/*
+  As cores já estão definidas em tailwind.config.js.
+  Este bloco pode ser usado para definir variáveis CSS globais se necessário.
+*/
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Exemplo de uso de variáveis CSS para facilitar temas futuros */
+  --color-primary: #D62800;
+  --color-secondary: #F94C10;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* 2. Suavização de fonte para melhor legibilidade no Chrome/Safari */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 3. Estilização Global de Links */
+a {
+  text-decoration: none;
 }
