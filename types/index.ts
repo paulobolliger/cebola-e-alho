@@ -4,6 +4,6 @@ export interface Post {
   title: string;
   slug: string;
   excerpt: string;
-  image_url: string;
+  image_url?: string; // Imagem pode ser opcional
   content: string;
 }

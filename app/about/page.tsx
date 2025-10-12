@@ -1,26 +1,27 @@
-// Componente de Servidor Estático, sem necessidade de 'use client' ou tipagem de props
 export default function AboutPage() {
   return (
-    <section className="p-8 max-w-4xl mx-auto">
-      {/* 1. Título com Cor Primária e Fonte Display (Alto Impacto) */}
-      <h1 className="text-4xl font-display font-black mb-6 text-primary">
-        A Alquimia da Cozinha Digital
-      </h1>
-      {/* 2. Corpo do texto com Fonte Body e Cor Base Suave */}
-      <p className="mb-4 text-text-base font-body text-lg leading-relaxed">
-        Cebola & Alho é a fusão do calor da cozinha com a precisão da Inteligência Artificial. 
-        Nossa missão é transformar os ingredientes que você já possui em experiências culinárias personalizadas e criativas.
-      </p>
-      <p className="mb-4 text-text-base font-body text-lg leading-relaxed">
-        Não somos apenas um site de receitas; somos seu **Assistente Culinário de IA**. 
-        Estimulamos a experimentação (Inspiradora) e garantimos a eficiência (Inteligente), sempre com um tom acessível e acolhedor (Calorosa).
-      </p>
-      <p className="mb-4 text-text-base font-body text-lg leading-relaxed">
-        Você nunca mais vai olhar para uma despensa vazia. Nós transformamos o que é possível no que é delicioso.
-      </p>
-      <p className="mt-8 text-secondary font-display text-lg font-bold">
-        Tecnologia: Next.js 13+ (App Router), React, TypeScript, Tailwind CSS e Supabase (Pronto para Integração).
-      </p>
-    </section>
-  )
+    <div className="bg-background">
+      <div className="container mx-auto px-4 py-16 md:py-24">
+        <div className="max-w-3xl mx-auto bg-surface p-8 md:p-12 rounded-lg shadow-lg border border-border">
+          <h1 className="font-display font-black text-4xl md:text-5xl text-primary mb-6 text-center">
+            🧅 Sobre Nós
+          </h1>
+          <div className="prose lg:prose-xl max-w-none text-text-secondary space-y-6">
+            <p>
+              Somos apaixonados por comida de verdade — daquelas que começam com o barulhinho do alho dourando na frigideira e terminam com gente sorrindo à mesa. O Cebola & Alho nasceu dessa mistura simples e poderosa: o prazer de cozinhar e a vontade de compartilhar sabores, histórias e segredos de cozinha sem frescura.
+            </p>
+            <p>
+              Aqui, acreditamos que cozinhar é um ato de amor, mas também de curiosidade, improviso e diversão. A cada receita, a gente te convida a redescobrir o prazer de preparar algo gostoso — seja um jantar rápido de terça-feira ou um almoço de domingo com a família toda reunida.
+            </p>
+            <p>
+              Usamos ingredientes acessíveis, técnicas que funcionam e um tempero extra de humor. Porque, convenhamos: o mundo precisa de mais risadas e menos panelas queimadas.
+            </p>
+            <p className="text-center font-display font-bold text-text-primary text-xl pt-4">
+              🍳 Cebola & Alho — o sabor da vida real, feito com alma, simplicidade e uma pitada de coragem.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

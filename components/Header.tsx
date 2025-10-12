@@ -1,53 +1,37 @@
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
+import MobileMenu from './MobileMenu'; // Importando o novo componente
 
-const Header = () => {
+export default function Header() {
   return (
-    <header className="bg-brand-white shadow-md sticky top-0 z-50">
-      <div className="container mx-auto flex items-center justify-between p-4">
-        <Link href="/" className="flex items-center space-x-2">
+    <header className="bg-surface text-text-primary shadow-sm sticky top-0 z-50 border-b border-border">
+      <div className="container mx-auto flex justify-between items-center p-4">
+        <Link href="/" className="flex items-center space-x-3 transition hover:opacity-80">
           <Image
-            src="/logo.png"
-            alt="Cebola & Alho Logo"
-            width={40}
-            height={40}
-            className="rounded-full"
+            src="https://res.cloudinary.com/dhqvjxgue/image/upload/v1760212377/logo-ceboela-e-alho-2_nawzzg.png"
+            alt="Cebola & Alho - Logo"
+            width={48}
+            height={48}
+            priority={true}
           />
-          <span className="font-display font-bold text-2xl text-brand-charcoal">
-            Cebola & Alho
-          </span>
         </Link>
-        <nav>
-          <ul className="flex items-center space-x-6">
-            <li>
-              <Link
-                href="/"
-                className="font-display font-semibold text-brand-charcoal hover:text-brand-primary transition-colors duration-300"
-              >
-                Gerador de Receitas
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/blog"
-                className="font-display font-semibold text-brand-charcoal hover:text-brand-primary transition-colors duration-300"
-              >
-                Blog
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/about"
-                className="font-display font-semibold text-brand-charcoal hover:text-brand-primary transition-colors duration-300"
-              >
-                Sobre
-              </Link>
-            </li>
-          </ul>
+
+        {/* Navegação para Desktop */}
+        <nav className="hidden md:flex items-center space-x-8 text-md font-body text-text-secondary">
+          <Link href="/" className="font-semibold text-primary hover:opacity-80 transition-colors">
+            Gerador
+          </Link>
+          <Link href="/blog" className="hover:text-primary transition-colors">
+            Blog
+          </Link>
+          <Link href="/about" className="hover:text-primary transition-colors">
+            Sobre
+          </Link>
         </nav>
+
+        {/* Menu para Mobile */}
+        <MobileMenu />
       </div>
     </header>
   );
-};
-
-export default Header;
+}

@@ -1,24 +1,28 @@
-// app/not-found.tsx
+import Link from 'next/link';
 
-import Link from 'next/link'
-
-// 1. O componente notFound é sempre um Server Component
 export default function NotFound() {
   return (
-    <div className="p-8 max-w-xl mx-auto text-center py-20 bg-background-soft rounded-xl my-12 shadow-xl">
-      {/* 2. Código HTTP com Destaque de Branding */}
-      <h1 className="text-6xl font-display font-black text-primary mb-2">404</h1>
-      <h2 className="text-3xl font-display font-bold text-text-base mb-6">
-        Despensa Vazia
-      </h2>
-      <p className="text-lg text-text-base font-body mb-8">
-        Não conseguimos encontrar esta página na nossa cozinha. Talvez o ingrediente tenha acabado!
-      </p>
-      
-      {/* 3. CTA Principal para a Home */}
-      <Link href="/" className="inline-block bg-primary text-white p-4 rounded-lg hover:bg-secondary transition font-display font-bold text-lg uppercase tracking-wider shadow-md">
-        Voltar à Cozinha Principal
-      </Link>
+    <div className="bg-background min-h-screen flex items-center justify-center">
+      <div className="container mx-auto px-4 py-16 text-center">
+        <div className="max-w-md mx-auto bg-surface p-8 md:p-12 rounded-lg shadow-lg border border-border">
+          <h1 className="font-display font-black text-6xl md:text-8xl text-primary">
+            404
+          </h1>
+          <h2 className="font-display font-bold text-2xl md:text-3xl text-text-primary mt-4 mb-6">
+            Página Não Encontrada
+          </h2>
+          <p className="text-text-secondary mb-8">
+            Oops! Parece que o tempero sumiu ou esta página nunca existiu.
+            Vamos voltar para a cozinha?
+          </p>
+          <Link
+            href="/"
+            className="inline-block bg-primary text-white font-display font-bold text-lg py-3 px-8 rounded-md hover:opacity-90 transition-all duration-300 transform hover:scale-105"
+          >
+            Voltar para a Home
+          </Link>
+        </div>
+      </div>
     </div>
-  )
+  );
 }

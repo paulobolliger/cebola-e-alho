@@ -2,22 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { z } from 'zod';
 
-// Initialize OpenAI client with the API key from environment variables
+// 1. Inicializa o cliente da OpenAI com a chave do .env
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Define a schema for input validation using Zod
+// 2. Define um esquema para validar a entrada
 const recipeRequestSchema = z.object({
   ingredients: z.string().min(3, 'Os ingredientes devem ter pelo menos 3 caracteres.'),
 });
 
 export async function POST(req: NextRequest) {
-  // 1. Securely get the API Key
+  // Valida se a chave da API existe no ambiente
   if (!process.env.OPENAI_API_KEY) {
     console.error('OPENAI_API_KEY is not set.');
     return NextResponse.json(
-      { error: 'A configuração do servidor está incompleta.' },
+      { error: 'A configuração do servidor está incompleta para gerar receitas.' },
       { status: 500 },
     );
   }
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // 2. Validate the input
+    // 3. Valida os dados recebidos do frontend
     const validationResult = recipeRequestSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
@@ -35,21 +35,20 @@ export async function POST(req: NextRequest) {
     }
     const { ingredients } = validationResult.data;
 
-    // 3. Enhanced Prompt Engineering
+    // 4. Cria um prompt detalhado para a IA (Prompt Engineering)
     const prompt = `
-      Você é um assistente culinário chamado "Cebola & Alho". Seu tom é de um "Chef Amigo": caloroso, acessível e inspirador.
-      Sua tarefa é criar uma receita deliciosa e simples usando principalmente os seguintes ingredientes: ${ingredients}.
-      Você pode adicionar ingredientes básicos como sal, pimenta, azeite, água, etc., se necessário.
+      Você é um assistente culinário especialista chamado "Cebola & Alho". Seu tom de voz é o de um "Chef Amigo": caloroso, acessível e inspirador.
+      Sua principal tarefa é criar uma receita deliciosa e prática usando principalmente os seguintes ingredientes: ${ingredients}.
+      Você pode adicionar ingredientes básicos como sal, pimenta, azeite, água, etc., se julgar necessário.
 
-      Por favor, estruture sua resposta usando Markdown da seguinte forma:
+      Por favor, estruture sua resposta **exclusivamente em Markdown** da seguinte forma:
 
       # [Nome Criativo e Saboroso para a Receita]
 
       ## Ingredientes
-      - [Ingrediente 1 da lista fornecida]
-      - [Ingrediente 2 da lista fornecida]
-      - [Etc.]
-      - [Qualquer ingrediente básico que você adicionou]
+      - [Ingrediente 1]
+      - [Ingrediente 2]
+      - [Etc...]
 
       ## Modo de Preparo
       1. [Primeiro passo, claro e direto]
@@ -57,28 +56,28 @@ export async function POST(req: NextRequest) {
       3. [Continue com os passos necessários]
 
       ## Dica do Chef
-      - [Uma dica ou sugestão para variar o prato ou uma técnica especial]
+      - [Ofereça uma dica ou sugestão para variar o prato, uma técnica especial ou uma sugestão de harmonização]
     `;
 
-    // 4. Call the OpenAI API
+    // 5. Chama a API da OpenAI
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
-      max_tokens: 500,
+      temperature: 0.7, // Um pouco de criatividade
+      max_tokens: 600,  // Espaço suficiente para uma boa receita
     });
 
     const recipe = completion.choices[0]?.message?.content?.trim() ?? '';
 
     if (!recipe) {
-      throw new Error('A IA não retornou uma receita.');
+      throw new Error('A IA não retornou uma receita válida.');
     }
 
     return NextResponse.json({ recipe });
   } catch (error) {
     console.error('Error calling OpenAI API:', error);
     return NextResponse.json(
-      { error: 'Não foi possível gerar a receita no momento.' },
+      { error: 'Não foi possível gerar a receita no momento. Tente novamente mais tarde.' },
       { status: 500 },
     );
   }
