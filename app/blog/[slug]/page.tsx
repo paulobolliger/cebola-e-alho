@@ -4,47 +4,28 @@ import type { Post } from '@/types';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 
-// A interface foi removida daqui
-
-export const revalidate = 3600;
-
 async function getPost(slug: string) {
   const cookieStore = cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-      },
+      cookies: { get: (name: string) => cookieStore.get(name)?.value },
     }
   );
 
-  const { data, error } = await supabase
-    .from('posts')
-    .select('*')
-    .eq('slug', slug)
-    .single();
-
-  if (error || !data) {
-    notFound();
-  }
-
+  const { data, error } = await supabase.from('posts').select('*').eq('slug', slug).single();
+  if (error || !data) notFound();
   return data as Post;
 }
 
 const formatDate = (dateString: string) => {
   if (!dateString) return '';
   return new Date(dateString).toLocaleDateString('pt-BR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
+    day: 'numeric', month: 'long', year: 'numeric',
   });
 };
 
-// A tipagem agora é feita diretamente aqui
 export default async function PostPage({ params }: { params: { slug: string } }) {
   const post = await getPost(params.slug);
 
