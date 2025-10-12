@@ -4,7 +4,6 @@ import type { Post } from '@/types';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 
-// A interface continua a mesma, sem a restrição 'extends PageProps'
 interface PostPageProps {
   params: {
     slug: string;
