@@ -4,11 +4,7 @@ import type { Post } from '@/types';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 
-interface PostPageProps {
-  params: {
-    slug: string;
-  };
-}
+// A interface foi removida daqui
 
 export const revalidate = 3600;
 
@@ -48,7 +44,8 @@ const formatDate = (dateString: string) => {
   });
 };
 
-export default async function PostPage({ params }: PostPageProps) {
+// A tipagem agora é feita diretamente aqui
+export default async function PostPage({ params }: { params: { slug: string } }) {
   const post = await getPost(params.slug);
 
   return (
