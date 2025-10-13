@@ -81,40 +81,40 @@ export default async function RecipePage({ params }: RecipePageProps) {
 
   return (
     <section className="p-8 max-w-5xl mx-auto">
-      <article className="bg-background-soft p-6 md:p-10 rounded-xl shadow-2xl">
-        
+      <article className="bg-surface p-6 md:p-10 rounded-xl shadow-2xl border border-border">
+
         {/* Imagem de Destaque */}
         <div className="relative w-full h-96 mb-8 rounded-lg overflow-hidden">
           <Image
             src={recipe.image}
             alt={recipe.title}
-            layout="fill"
-            objectFit="cover"
+            fill
+            className="object-cover"
             priority // Priorizar o carregamento da LCP
           />
         </div>
 
         {/* Título e Descrição */}
-        <header className="mb-8 border-b border-gray-300 pb-4">
+        <header className="mb-8 border-b border-border pb-4">
           <h1 className="text-5xl font-display font-black text-primary mb-2">
             {recipe.title}
           </h1>
-          <p className="text-xl font-body text-secondary font-semibold">
+          <p className="text-xl font-body text-text-secondary font-semibold">
             Gerada por IA para você, com precisão e sabor.
           </p>
         </header>
 
-        <p className="text-text-base text-lg font-body italic mb-8 border-l-4 border-accent pl-4">
+        <p className="text-text-primary text-lg font-body italic mb-8 border-l-4 border-accent pl-4">
           "A sugestão do nosso Chef Amigo: {recipe.description}"
         </p>
 
         <div className="grid md:grid-cols-2 gap-10">
           {/* Ingredientes */}
           <div>
-            <h2 className="text-3xl font-display font-bold text-text-base mb-4 border-b pb-2">
+            <h2 className="text-3xl font-display font-bold text-text-primary mb-4 border-b pb-2">
               Ingredientes
             </h2>
-            <ul className="space-y-3 font-body text-text-base text-lg list-disc list-inside">
+            <ul className="space-y-3 font-body text-text-secondary text-lg list-disc list-inside">
               {ingredientsArray.map((item, index) => (
                 <li key={index}>{item}</li>
               ))}
@@ -123,10 +123,10 @@ export default async function RecipePage({ params }: RecipePageProps) {
 
           {/* Modo de Preparo */}
           <div>
-            <h2 className="text-3xl font-display font-bold text-text-base mb-4 border-b pb-2">
+            <h2 className="text-3xl font-display font-bold text-text-primary mb-4 border-b pb-2">
               Modo de Preparo
             </h2>
-            <ol className="space-y-4 font-body text-text-base text-lg list-decimal list-inside">
+            <ol className="space-y-4 font-body text-text-secondary text-lg list-decimal list-inside">
               {instructionsArray.map((step, index) => (
                 <li key={index}>
                   <p className="inline pl-2">{step}</p>
@@ -137,10 +137,10 @@ export default async function RecipePage({ params }: RecipePageProps) {
         </div>
 
       </article>
-      
+
       {/* CTA para nova busca */}
       <div className="text-center mt-12">
-        <Link href="/" className="inline-block bg-primary text-white p-4 rounded-lg hover:bg-secondary transition font-display font-bold text-lg uppercase tracking-wider shadow-lg">
+        <Link href="/" className="inline-block bg-primary text-white p-4 rounded-lg hover:opacity-90 transition font-display font-bold text-lg uppercase tracking-wider shadow-lg">
           Transforme Outros Ingredientes com IA
         </Link>
       </div>

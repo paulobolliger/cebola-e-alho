@@ -4,7 +4,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-footer-bg text-background-soft p-8">
+    <footer className="bg-text-primary text-background p-8">
       <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
         {/* Coluna 1: Marca e Slogan */}
         <div>

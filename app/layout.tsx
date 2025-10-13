@@ -34,7 +34,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="pt-BR" className={`${poppins.variable} ${roboto.variable}`}>
       {/* Aplicando as classes de fonte e cor base para todo o site */}
-      <body className="flex flex-col min-h-screen font-body bg-background-light text-text-base">
+      <body className="flex flex-col min-h-screen font-body bg-background text-text-secondary">
         <Header />
         <main className="flex-grow">{children}</main>
         <Footer />
