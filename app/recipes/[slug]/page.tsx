@@ -1,58 +1,61 @@
 // app/recipes/[slug]/page.tsx
+import { notFound } from 'next/navigation';
+import Image from 'next/image';
+import { Metadata } from 'next';
+import Link from 'next/link';
+import { createSupabaseClient } from '@/lib/supabaseClient'; // Atualizado para o novo cliente
 
-import { notFound } from 'next/navigation'
-import Image from 'next/image'
-import { Metadata } from 'next'
-import Link from 'next/link'
-import { clientSupabase } from '@/lib/supabaseClient' // 1. Uso do cliente público para leitura
-
-// 2. Definição da interface de dados da Receita (Ajustada para a estrutura do banco)
+// Interface da Receita (mantenha local ou mova para types/index.ts)
 interface Recipe {
   id: string;
   title: string;
   slug: string;
-  image: string; // Assumindo que a imagem ainda é mockada
+  image: string;
   description: string;
-  // A API Route salva ingredientes/instruções como strings separadas
   ingredients_string: string;
   instructions_string: string;
 }
 
-// 3. Função de busca de dados (Server Component)
+// Função de busca de dados (Server Component)
 async function getRecipeBySlug(slug: string): Promise<Recipe | null> {
-  // Chamada ao Supabase usando o cliente público (clientSupabase)
-  const { data, error } = await clientSupabase
-    .from('recipes')
-    .select('id, title, slug, image, description, ingredients_string, instructions_string') // Seleciona apenas as colunas necessárias
-    .eq('slug', slug)
-    .single()
+  try {
+    const supabase = createSupabaseClient(); // Cria o cliente aqui
+    const { data, error } = await supabase
+      .from('recipes')
+      .select('id, title, slug, image, description, ingredients_string, instructions_string')
+      .eq('slug', slug)
+      .single();
 
-  if (error || !data) {
-    // console.error(error) // Log do erro de DB (apenas para debug)
-    return null
+    if (error || !data) {
+      console.error('Supabase error:', error); // Debug no console
+      return null;
+    }
+
+    // Adiciona fallback para imagem
+    return {
+      ...data,
+      image: data.image || '/recipe-card.png',
+    } as Recipe;
+  } catch (err) {
+    console.error('Error in getRecipeBySlug:', err);
+    return null;
   }
-
-  // Adiciona campo image mockado
-  return {
-    ...data,
-    image: data.image || '/recipe-card.png',
-  } as Recipe
 }
 
-// 4. Tipagem dos Props da Page (parâmetros dinâmicos)
+// Tipagem dos Props da Page (Next.js 14)
 interface RecipePageProps {
-  params: { slug: string }
+  params: { slug: string };
 }
 
-// 5. Função para gerar metadados dinâmicos (SEO - Server Component)
+// Geração de metadados dinâmicos (SEO)
 export async function generateMetadata({ params }: RecipePageProps): Promise<Metadata> {
-  const recipe = await getRecipeBySlug(params.slug)
+  const recipe = await getRecipeBySlug(params.slug);
 
   if (!recipe) {
     return {
       title: 'Receita não encontrada | Cebola & Alho',
-      description: 'Oops! Não encontramos esta receita.'
-    }
+      description: 'Oops! Não encontramos esta receita.',
+    };
   }
 
   return {
@@ -62,27 +65,24 @@ export async function generateMetadata({ params }: RecipePageProps): Promise<Met
     openGraph: {
       images: [{ url: recipe.image }],
     },
-  }
+  };
 }
 
-// 6. Componente principal (Server Component)
+// Componente principal (Server Component)
 export default async function RecipePage({ params }: RecipePageProps) {
-  const recipe = await getRecipeBySlug(params.slug)
+  const recipe = await getRecipeBySlug(params.slug);
 
   if (!recipe) {
-    // Redireciona para a página 404 nativa do Next.js
-    notFound()
+    notFound();
   }
 
-  // 7. Processamento das strings para exibição em lista
-  const ingredientsArray = recipe.ingredients_string.split(/\n|,/g).map(s => s.trim()).filter(s => s.length > 0)
-  const instructionsArray = recipe.instructions_string.split(/\n/g).map(s => s.trim()).filter(s => s.length > 0)
-
+  // Processamento das strings para exibição em lista
+  const ingredientsArray = recipe.ingredients_string.split(/\n|,/g).map(s => s.trim()).filter(s => s.length > 0);
+  const instructionsArray = recipe.instructions_string.split(/\n/g).map(s => s.trim()).filter(s => s.length > 0);
 
   return (
     <section className="p-8 max-w-5xl mx-auto">
       <article className="bg-surface p-6 md:p-10 rounded-xl shadow-2xl border border-border">
-
         {/* Imagem de Destaque */}
         <div className="relative w-full h-96 mb-8 rounded-lg overflow-hidden">
           <Image
@@ -90,7 +90,7 @@ export default async function RecipePage({ params }: RecipePageProps) {
             alt={recipe.title}
             fill
             className="object-cover"
-            priority // Priorizar o carregamento da LCP
+            priority
           />
         </div>
 
@@ -135,16 +135,17 @@ export default async function RecipePage({ params }: RecipePageProps) {
             </ol>
           </div>
         </div>
-
       </article>
 
       {/* CTA para nova busca */}
       <div className="text-center mt-12">
-        <Link href="/" className="inline-block bg-primary text-white p-4 rounded-lg hover:opacity-90 transition font-display font-bold text-lg uppercase tracking-wider shadow-lg">
+        <Link
+          href="/"
+          className="inline-block bg-primary text-white p-4 rounded-lg hover:opacity-90 transition font-display font-bold text-lg uppercase tracking-wider shadow-lg"
+        >
           Transforme Outros Ingredientes com IA
         </Link>
       </div>
-
     </section>
-  )
+  );
 }
