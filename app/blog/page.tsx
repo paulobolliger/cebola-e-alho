@@ -1,26 +1,11 @@
 import BlogCard from '@/components/BlogCard';
-import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { Post } from '@/types';
+import { createSupabaseClient } from '@/lib/supabaseClient'; // MELHORIA: Usando a função centralizada
 
 async function getPosts() {
-  const cookieStore = cookies();
-  // Verificação para garantir que as variáveis de ambiente não são nulas
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error("Supabase URL or Anon Key is missing from environment variables.");
-    return [];
-  }
-  
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      get(name: string) {
-        return cookieStore.get(name)?.value;
-      },
-    },
-  });
+  // A função createSupabaseClient já cuida das cookies e variáveis de ambiente
+  const supabase = createSupabaseClient(); 
 
   const { data, error } = await supabase.from('posts').select('*');
 
@@ -36,7 +21,8 @@ export default async function BlogPage() {
   const posts = await getPosts();
 
   return (
-    <div className="bg-background min-h-screen">
+    // CORREÇÃO: Removido 'bg-background' para herdar a cor branca do layout.
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-16">
         <section className="text-center mb-12">
           <h1 className="font-display font-black text-5xl md:text-6xl text-text-primary mb-4">

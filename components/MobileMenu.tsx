@@ -6,7 +6,9 @@ import Link from 'next/link';
 export default function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
 
-  const toggleMenu = () => setIsOpen(!isOpen);
+  // MELHORIA: Usa callback para garantir a atualização correta do estado.
+  const toggleMenu = () => setIsOpen((prev) => !prev);
+  const closeMenu = () => setIsOpen(false);
 
   return (
     <div className="md:hidden">
@@ -41,14 +43,14 @@ export default function MobileMenu() {
         {/* Backdrop */}
         <div
           className="fixed inset-0 bg-black opacity-50"
-          onClick={toggleMenu}
+          onClick={closeMenu} // Usa closeMenu para fechar
         ></div>
 
         {/* Painel Lateral */}
         <div className="fixed top-0 right-0 h-full w-64 bg-surface shadow-lg z-50 p-6">
           <div className="flex justify-end mb-8">
             <button
-              onClick={toggleMenu}
+              onClick={closeMenu} // Usa closeMenu para fechar
               className="text-text-primary"
               aria-label="Fechar menu"
             >
@@ -68,14 +70,18 @@ export default function MobileMenu() {
               </svg>
             </button>
           </div>
+          {/* CORREÇÃO: Alterando link Gerador para Home e adicionando Receitas */}
           <nav className="flex flex-col space-y-6 text-xl font-body text-text-secondary items-center">
-            <Link href="/" className="font-semibold text-primary" onClick={toggleMenu}>
-              Gerador
+            <Link href="/" className="font-semibold text-primary" onClick={closeMenu}>
+              Home
             </Link>
-            <Link href="/blog" className="hover:text-primary" onClick={toggleMenu}>
+            <Link href="/recipes" className="hover:text-primary" onClick={closeMenu}>
+              Receitas
+            </Link>
+            <Link href="/blog" className="hover:text-primary" onClick={closeMenu}>
               Blog
             </Link>
-            <Link href="/about" className="hover:text-primary" onClick={toggleMenu}>
+            <Link href="/about" className="hover:text-primary" onClick={closeMenu}>
               Sobre
             </Link>
           </nav>

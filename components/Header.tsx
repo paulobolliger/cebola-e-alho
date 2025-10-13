@@ -1,9 +1,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import MobileMenu from './MobileMenu'; // Importando o novo componente
+import MobileMenu from './MobileMenu';
 
 export default function Header() {
   return (
+    // Melhor Prática: sticky e z-50 para garantir que o header esteja sempre por cima
     <header className="bg-surface text-text-primary shadow-sm sticky top-0 z-50 border-b border-border">
       <div className="container mx-auto flex justify-between items-center p-4">
         <Link href="/" className="flex items-center space-x-3 transition hover:opacity-80">
@@ -16,10 +17,13 @@ export default function Header() {
           />
         </Link>
 
-        {/* Navegação para Desktop */}
+        {/* Navegação para Desktop - CORREÇÃO: Adicionando Receitas e Renomeando */}
         <nav className="hidden md:flex items-center space-x-8 text-md font-body text-text-secondary">
           <Link href="/" className="font-semibold text-primary hover:opacity-80 transition-colors">
-            Gerador
+            Home
+          </Link>
+          <Link href="/recipes" className="hover:text-primary transition-colors">
+            Receitas
           </Link>
           <Link href="/blog" className="hover:text-primary transition-colors">
             Blog

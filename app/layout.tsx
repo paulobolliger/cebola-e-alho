@@ -37,11 +37,12 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="pt-BR" className={`${poppins.variable} ${roboto.variable}`}>
-      {/* CORREÇÃO: Envolvemos o componente GTM em <Suspense> */}
+      {/* Correção: Envolvemos o componente GTM em <Suspense> para compatibilidade */}
       <Suspense fallback={null}> 
         <GoogleTagManagerScript />
       </Suspense>
       
+      {/* bg-background agora é branco puro */}
       <body className="flex flex-col min-h-screen font-body bg-background text-text-secondary">
         {/* Injeção da tag <noscript> (parte 2) - Deve ser o primeiro elemento do <body> */}
         {GTM_ID && (

@@ -16,12 +16,15 @@ export default function Footer() {
           </p>
         </div>
 
-        {/* Coluna 2: Links de Navegação */}
+        {/* Coluna 2: Links de Navegação - CORREÇÃO: Ajustando links para a nova estrutura */}
         <div>
           <h4 className="font-display font-bold text-lg mb-3 text-white">Navegue</h4>
           <nav className="flex flex-col space-y-2 items-center md:items-start">
             <Link href="/" className="hover:text-accent transition-colors">
-              Gerador de Receitas
+              Home (Gerador)
+            </Link>
+            <Link href="/recipes" className="hover:text-accent transition-colors">
+              Receitas
             </Link>
             <Link href="/blog" className="hover:text-accent transition-colors">
               Blog

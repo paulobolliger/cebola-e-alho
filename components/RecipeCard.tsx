@@ -1,42 +1,20 @@
-import Image from 'next/image'
-import Link from 'next/link'
+import Link from 'next/link';
+import { Recipe } from '@/types/recipe';
 
-// 1. Tipagem das Props
-interface RecipeCardProps {
-  title: string
-  image: string
-}
-
-export default function RecipeCard({ title, image }: RecipeCardProps) {
-  // Cria um slug simples para a URL, alinhado com as rotas do Next.js App Router
-  const slug = title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '')
-
+export default function RecipeCard({ recipe }: { recipe: Recipe }) {
   return (
-    // 2. Uso do Link para navegação otimizada
-    <Link href={`/recipes/${slug}`} className="block">
-      <div className="bg-background-light rounded-lg shadow-lg overflow-hidden transition-shadow duration-300 hover:shadow-2xl hover:scale-[1.02] transform">
-        {/* 3. Uso de Next/Image para Performance */}
-        <div className="relative w-full h-48">
-          {image && (
-            <Image
-              src={image}
-              alt={`Imagem da receita: ${title}`}
-              layout="fill"
-              objectFit="cover"
-            />
-          )}
-        </div>
+    <article className="bg-softWhite rounded-card shadow-card overflow-hidden hover:scale-105 transition-transform">
+      <Link href={`/recipes/${recipe.slug}`}>
+        <img
+          src={recipe.images?.[0]?.url || '/recipe-card.png'}
+          alt={recipe.images?.[0]?.alt || recipe.title}
+          className="w-full h-48 object-cover"
+        />
         <div className="p-4">
-          {/* 4. Título com Fonte Display e Cor Principal */}
-          <h3 className="font-display font-bold text-xl text-text-base mb-2 truncate">
-            {title}
-          </h3>
-          {/* 5. Acento de Cor Secundaria no CTA */}
-          <p className="text-secondary text-sm font-body font-semibold hover:underline transition">
-            Clique para ver a receita completa.
-          </p>
+          <h3 className="text-deepPurple font-bold text-lg mb-2">{recipe.title}</h3>
+          <p className="text-primaryGreen text-sm">{recipe.excerpt}</p>
         </div>
-      </div>
-    </Link>
-  )
+      </Link>
+    </article>
+  );
 }
