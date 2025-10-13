@@ -1,8 +1,9 @@
 import './globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { ReactNode } from 'react';
+import { ReactNode, Suspense } from 'react'; // Importação do Suspense
 import { Poppins, Roboto } from 'next/font/google';
+import GoogleTagManagerScript from '@/components/GoogleTagManagerScript'; 
 
 // Carregando as fontes com as variáveis que definimos no Tailwind
 const poppins = Poppins({
@@ -16,6 +17,9 @@ const roboto = Roboto({
   weight: ['400', '700'],
   variable: '--font-body',
 });
+
+// Obtendo o ID do GTM para o componente noscript (Server Component)
+const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
 
 export const metadata = {
   title: 'Cebola & Alho - Sua despensa, infinitas receitas. Geradas por IA.',
@@ -33,8 +37,24 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="pt-BR" className={`${poppins.variable} ${roboto.variable}`}>
-      {/* Aplicando as classes de fonte e cor base para todo o site */}
+      {/* CORREÇÃO: Envolvemos o componente GTM em <Suspense> */}
+      <Suspense fallback={null}> 
+        <GoogleTagManagerScript />
+      </Suspense>
+      
       <body className="flex flex-col min-h-screen font-body bg-background text-text-secondary">
+        {/* Injeção da tag <noscript> (parte 2) - Deve ser o primeiro elemento do <body> */}
+        {GTM_ID && (
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+              height="0"
+              width="0"
+              style={{ display: 'none', visibility: 'hidden' }}
+            />
+          </noscript>
+        )}
+
         <Header />
         <main className="flex-grow">{children}</main>
         <Footer />
