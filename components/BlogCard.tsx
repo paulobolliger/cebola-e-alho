@@ -1,20 +1,36 @@
-import Link from 'next/link';
-import { Post } from '@/types/post';
+// components/BlogCard.tsx
+import Link from "next/link";
+import Image from "next/image";
+import { Post } from "@/types"; // Caminho corrigido
 
-export default function BlogCard({ post }: { post: Post }) {
+type BlogCardProps = {
+  post: Post;
+};
+
+const BlogCard = ({ post }: BlogCardProps) => {
   return (
-    <article className="bg-softWhite rounded-card shadow-card overflow-hidden hover:scale-105 transition-transform">
-      <Link href={`/blog/${post.slug}`}>
-        <img
-          src={post.images?.[0]?.url || '/blog-card.png'}
-          alt={post.images?.[0]?.alt || post.title}
-          className="w-full h-48 object-cover"
+    <Link
+      href={`/blog/${post.slug}`}
+      className="block bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
+    >
+      <div className="relative h-48 w-full">
+        <Image
+          src={post.image_url || "/blog-card.png"}
+          alt={`Imagem do post ${post.title}`}
+          layout="fill"
+          objectFit="cover"
         />
-        <div className="p-4">
-          <h3 className="text-deepPurple font-bold text-lg mb-2">{post.title}</h3>
-          <p className="text-primaryGreen text-sm">{post.excerpt}</p>
-        </div>
-      </Link>
-    </article>
+      </div>
+      <div className="p-6">
+        <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
+          {post.title}
+        </h3>
+        <p className="text-gray-600 dark:text-gray-400 line-clamp-3">
+          {post.description}
+        </p>
+      </div>
+    </Link>
   );
-}
+};
+
+export default BlogCard;

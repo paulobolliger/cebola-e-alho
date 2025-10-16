@@ -1,18 +1,152 @@
 import Link from 'next/link';
-import { Recipe } from '@/types/recipe';
+import Image from 'next/image';
 
-export default function RecipeCard({ recipe }: { recipe: Recipe }) {
+interface RecipeCardProps {
+  recipe: {
+    id: string;
+    title: string;
+    slug: string;
+    image: string;
+    description?: string;
+    prep_time?: number; // em minutos
+    difficulty?: 'Fácil' | 'Média' | 'Difícil';
+    rating?: number; // 0-5
+    rating_count?: number;
+  };
+}
+
+export default function RecipeCard({ recipe }: RecipeCardProps) {
+  // Renderiza ícones de chama baseado na dificuldade
+  const renderDifficulty = () => {
+    const flames = {
+      'Fácil': 1,
+      'Média': 2,
+      'Difícil': 3
+    }[recipe.difficulty || 'Média'];
+
+    return (
+      <div className="flex items-center gap-1">
+        {[...Array(3)].map((_, i) => (
+          <span 
+            key={i} 
+            className={`text-sm ${i < flames ? 'text-primary' : 'text-gray-300'}`}
+          >
+            🔥
+          </span>
+        ))}
+      </div>
+    );
+  };
+
+  // Renderiza estrelas de avaliação
+  const renderRating = () => {
+    if (!recipe.rating) return null;
+    
+    return (
+      <div className="flex items-center gap-1">
+        <div className="flex">
+          {[...Array(5)].map((_, i) => (
+            <span 
+              key={i}
+              className={`text-sm ${i < Math.floor(recipe.rating!) ? 'text-accent' : 'text-gray-300'}`}
+            >
+              ⭐
+            </span>
+          ))}
+        </div>
+        {recipe.rating_count && (
+          <span className="text-xs text-text-secondary">
+            ({recipe.rating_count})
+          </span>
+        )}
+      </div>
+    );
+  };
+
   return (
-    <article className="bg-softWhite rounded-card shadow-card overflow-hidden hover:scale-105 transition-transform">
+    <article className="group bg-surface rounded-2xl shadow-card hover:shadow-fire overflow-hidden transition-all duration-300 hover:scale-[1.02] border border-border">
       <Link href={`/recipes/${recipe.slug}`}>
-        <img
-          src={recipe.images?.[0]?.url || '/recipe-card.png'}
-          alt={recipe.images?.[0]?.alt || recipe.title}
-          className="w-full h-48 object-cover"
-        />
-        <div className="p-4">
-          <h3 className="text-deepPurple font-bold text-lg mb-2">{recipe.title}</h3>
-          <p className="text-primaryGreen text-sm">{recipe.excerpt}</p>
+        {/* Imagem com Overlay de Tempo */}
+        <div className="relative h-56 overflow-hidden">
+          <Image
+            src={recipe.image || '/recipe-card.png'}
+            alt={recipe.title}
+            fill
+            className="object-cover group-hover:scale-110 transition-transform duration-500"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+          
+          {/* Overlay escuro sutil */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0"></div>
+          
+          {/* Badge de Tempo (se disponível) */}
+          {recipe.prep_time && (
+            <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1 shadow-md">
+              <span className="text-xs">⏱️</span>
+              <span className="text-xs font-bold text-text-primary">
+                {recipe.prep_time}min
+              </span>
+            </div>
+          )}
+
+          {/* Badge "NOVO" (pode adicionar lógica baseada em created_at) */}
+          {/* Exemplo: Se criado nos últimos 7 dias */}
+          <div className="absolute top-3 left-3 bg-primary text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-md">
+            🔥 Novo
+          </div>
+        </div>
+
+        {/* Conteúdo do Card */}
+        <div className="p-5">
+          {/* Título */}
+          <h3 className="font-display font-bold text-xl text-text-primary mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+            {recipe.title}
+          </h3>
+
+          {/* Descrição */}
+          {recipe.description && (
+            <p className="text-sm text-text-secondary mb-4 line-clamp-2 leading-relaxed">
+              {recipe.description}
+            </p>
+          )}
+
+          {/* Meta Informações */}
+          <div className="flex items-center justify-between pt-4 border-t border-border">
+            {/* Dificuldade */}
+            <div className="flex flex-col">
+              <span className="text-xs text-text-secondary mb-1">Dificuldade</span>
+              {renderDifficulty()}
+            </div>
+
+            {/* Avaliação */}
+            <div className="flex flex-col items-end">
+              <span className="text-xs text-text-secondary mb-1">Avaliação</span>
+              {renderRating() || (
+                <span className="text-xs text-text-secondary italic">Sem avaliações</span>
+              )}
+            </div>
+          </div>
+
+          {/* CTA Sutil */}
+          <div className="mt-4 flex items-center justify-between">
+            <span className="text-sm font-display font-bold text-primary group-hover:underline inline-flex items-center gap-2">
+              Ver Receita Completa
+              <span className="group-hover:translate-x-1 transition-transform">→</span>
+            </span>
+
+            {/* Botão de Favorito (futuro - requer autenticação) */}
+            <button
+              onClick={(e) => {
+                e.preventDefault(); // Previne navegação
+                // TODO: Implementar lógica de favoritar
+                console.log('Favoritar receita:', recipe.id);
+              }}
+              className="p-2 rounded-full hover:bg-accent/10 transition-colors"
+              aria-label="Salvar receita"
+            >
+              <span className="text-xl">🤍</span> {/* Trocar para ❤️ se favoritado */}
+            </button>
+          </div>
         </div>
       </Link>
     </article>

@@ -46,9 +46,11 @@ export default async function RecipesPage() {
           {recipes.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {recipes.map((recipe) => (
-                // RecipeCard usa 'title' e 'image'
-                <RecipeCard key={recipe.id} title={recipe.title} image={recipe.image} />
-              ))}
+                <RecipeCard 
+                  key={recipe.id} 
+                  recipe={recipe} 
+                />
+            ))}
             </div>
           ) : (
             <div className="text-center py-16 bg-surface border border-border rounded-xl shadow-md">
