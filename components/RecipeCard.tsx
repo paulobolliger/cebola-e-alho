@@ -1,18 +1,10 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
+import { Recipe } from '@/types';
+
 interface RecipeCardProps {
-  recipe: {
-    id: string;
-    title: string;
-    slug: string;
-    image: string;
-    description?: string;
-    prep_time?: number; // em minutos
-    difficulty?: 'Fácil' | 'Média' | 'Difícil';
-    rating?: number; // 0-5
-    rating_count?: number;
-  };
+  recipe: Recipe;
 }
 
 export default function RecipeCard({ recipe }: RecipeCardProps) {
@@ -94,6 +86,16 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
           <div className="absolute top-3 left-3 bg-primary text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-md">
             🔥 Novo
           </div>
+
+          {/* Badge de Ingredientes */}
+          {recipe.ingredients && (
+            <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-md">
+              <span className="text-xs">🍲</span>
+              <span className="text-xs font-bold text-text-primary">
+                {recipe.ingredients.length} ingredientes
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Conteúdo do Card */}
