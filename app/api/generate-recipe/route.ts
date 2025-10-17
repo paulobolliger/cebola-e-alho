@@ -1,19 +1,21 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { z } from 'zod';
-import { createSupabaseClient } from '@/lib/supabaseClient'; // For user auth
-import { supabaseAdmin } from '@/lib/supabase/admin'; // For admin-level writes
+import fs from 'fs';
+import path from 'path';
 import slugify from 'slugify';
 
-// Init OpenAI
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 // Zod schema for input validation
 const recipeRequestSchema = z.object({
   ingredients: z.string().min(3, 'Os ingredientes devem ter pelo menos 3 caracteres.'),
 });
 
-// Output type
+// Define the expected JSON structure from OpenAI
 interface RecipeData {
   title: string;
   description: string;
@@ -21,20 +23,44 @@ interface RecipeData {
   cook_time: number;
   servings: string;
   ingredients: { item: string; quantity: string }[];
-  instructions: { step: number; description:string }[];
+  instructions: { step: number; description: string }[];
   tips: string[];
 }
+
+// Function to format the recipe data into a Markdown string
+function formatRecipeToMarkdown(recipe: RecipeData): string {
+  let markdown = `# ${recipe.title}\n\n`;
+  markdown += `${recipe.description}\n\n`;
+  markdown += `**Tempo de Preparo:** ${recipe.prep_time} minutos\n`;
+  markdown += `**Tempo de Cozimento:** ${recipe.cook_time} minutos\n`;
+  markdown += `**Rendimento:** ${recipe.servings}\n\n`;
+
+  markdown += `## Ingredientes\n`;
+  recipe.ingredients.forEach(ing => {
+    markdown += `- **${ing.quantity}** ${ing.item}\n`;
+  });
+  markdown += `\n`;
+
+  markdown += `## Instruções\n`;
+  recipe.instructions.forEach(inst => {
+    markdown += `${inst.step}. ${inst.description}\n`;
+  });
+  markdown += `\n`;
+
+  if (recipe.tips && recipe.tips.length > 0) {
+    markdown += `## Dicas do Chef\n`;
+    recipe.tips.forEach(tip => {
+      markdown += `- ${tip}\n`;
+    });
+  }
+
+  return markdown;
+}
+
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const supabase = createSupabaseClient(); // Standard client for auth
-
-    // **SECURITY FIX: Check for authenticated user**
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Você precisa estar logado para criar uma receita.' }, { status: 401 });
-    }
 
     // Validate input using Zod
     const validation = recipeRequestSchema.safeParse(body);
@@ -49,12 +75,7 @@ export async function POST(request: Request) {
       You are a world-class culinary expert assistant named "Cebola & Alho". Your tone is that of a "Friendly Chef": warm, inspiring, and accessible.
       Your main task is to create a delicious and practical recipe based on the user's ingredients: "${ingredients}".
       You must return the response exclusively in a valid JSON object, following the specified schema.
-      Do not include any introductory text like "Here is the recipe". Just the JSON.
-      The recipe should be creative but achievable for a home cook.
-      Ensure all fields are filled appropriately.
-      \`prep_time\` is the preparation time in minutes.
-      \`cook_time\` is the cooking time in minutes.
-      Servings should be a string like "2-3 pessoas".
+      Do not include any introductory text.
       The JSON schema is:
       {
         "title": "string",
@@ -68,48 +89,44 @@ export async function POST(request: Request) {
       }
     `;
 
+    // Call OpenAI API
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       messages: [{ role: 'system', content: systemPrompt }],
       temperature: 0.7,
       response_format: { type: 'json_object' },
     });
 
     const content = response.choices[0]?.message?.content;
-    if (!content) throw new Error('No content received from OpenAI');
+
+    if (!content) {
+      throw new Error('No content received from OpenAI');
+    }
 
     const recipeData: RecipeData = JSON.parse(content);
+
+    // --- Save recipe to local file ---
     const slug = slugify(recipeData.title, { lower: true, strict: true });
+    const dirPath = path.join(process.cwd(), 'receitas-geradas');
+    const filePath = path.join(dirPath, `${slug}.json`);
 
-    // Save the recipe to Supabase
-    const { data: newRecipe, error } = await supabase
-      .from('recipes')
-      .insert([
-        {
-          title: recipeData.title,
-          description: recipeData.description,
-          prep_time: recipeData.prep_time,
-          cook_time: recipeData.cook_time,
-          servings: recipeData.servings,
-          ingredients: recipeData.ingredients,
-          instructions: recipeData.instructions,
-          tips: recipeData.tips,
-          slug,
-          // Corrigido: 'category_id' foi removido
-          author_id: 'd9b73b5e-9a9c-4c7b-9d4a-1e3f8c2b0e1a', // Hardcoded author_id
-          published_at: new Date().toISOString(),
-          images: [{ url: '/recipe-card.png', alt: recipeData.title }],
-        },
-      ])
-      .select('slug')
-      .single();
+    // Ensure directory exists
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
 
-    if (error) throw new Error(`Supabase insert failed: ${error.message}`);
+    // Write the JSON file
+    fs.writeFileSync(filePath, JSON.stringify(recipeData, null, 2));
 
-    return NextResponse.json({ slug: newRecipe.slug }, { status: 201 });
+    // --- Format recipe to Markdown for frontend ---
+    const markdownRecipe = formatRecipeToMarkdown(recipeData);
+
+    // Return the formatted recipe to be displayed on the page
+    return NextResponse.json({ recipe: markdownRecipe }, { status: 200 });
+
   } catch (error) {
     console.error('API Error:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+    return NextResponse.json({ error: 'Failed to generate recipe.', details: errorMessage }, { status: 500 });
   }
 }
