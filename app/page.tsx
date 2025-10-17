@@ -81,7 +81,7 @@ export default function HomePage() {
                 href="#gerador" 
                 className="bg-white text-primary font-display font-bold text-lg px-8 py-4 rounded-lg hover:scale-105 transition-transform shadow-fire"
               >
-                Gerar Minha Receita 🍳
+                Gerar Minha Receita
               </a>
               <Link 
                 href="/recipes" 

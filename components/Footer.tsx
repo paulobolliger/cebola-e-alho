@@ -11,7 +11,7 @@ export default function Footer() {
         <div className="flex flex-col items-center md:items-start">
           <div className="relative w-24 h-24 mb-4">
             <Image
-              src="https://res.cloudinary.com/dhqvjxgue/image/upload/v1760212377/logo-ceboela-e-alho-2_nawzzg.png"
+              src="https://res.cloudinary.com/dhqvjxgue/image/upload/v1760213016/logo-ceboela-e-alho-2-removebg-preview_1_uwm5eu.png"
               alt="Cebola & Alho Logo"
               fill
               className="object-contain"
