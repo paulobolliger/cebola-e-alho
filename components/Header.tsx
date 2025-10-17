@@ -17,7 +17,7 @@ export default function Header() {
         <div className="flex justify-between items-center h-24 px-4">
           {/* Logo + Nome */}
           <Link href="/" className="flex items-center gap-3 group transition-all hover:scale-105">
-            <div className="relative h-22 w-22">
+            <div className="relative h-20 w-20">
               <Image
                 src="https://res.cloudinary.com/dhqvjxgue/image/upload/v1760212377/logo-ceboela-e-alho-2_nawzzg.png"
                 alt="Cebola & Alho"
