@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/update-recipe-images",
+      "schedule": "0 05 * * *" 
+    }
+  ]
+}
