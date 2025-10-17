@@ -47,7 +47,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* 🔥 HERO SECTION - Dramático e Vibrante */}
-      <section className="relative overflow-hidden bg-gradient-fire py-20 md:py-32">
+      <section className="relative overflow-hidden bg-gradient-fire py-10 md:py-16">
         {/* Efeito de chama animada no fundo */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-accent rounded-full blur-3xl animate-pulse-slow"></div>

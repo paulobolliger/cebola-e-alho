@@ -19,8 +19,7 @@ const recipeRequestSchema = z.object({
 interface RecipeData {
   title: string;
   description: string;
-  prep_time: number;
-  cook_time: number;
+  cooking_time: number;
   servings: string;
   ingredients: { item: string; quantity: string }[];
   instructions: { step: number; description: string }[];
@@ -50,15 +49,13 @@ export async function POST(request: Request) {
       Do not include any introductory text like "Here is the recipe". Just the JSON.
       The recipe should be creative but achievable for a home cook.
       Ensure all fields are filled appropriately.
-      `prep_time` is the preparation time in minutes.
-      `cook_time` is the cooking time in minutes.
+      Cooking time should be in total minutes.
       Servings should be a string like "2-3 pessoas".
       The JSON schema is:
       {
         "title": "string",
         "description": "string",
-        "prep_time": "number (in minutes)",
-        "cook_time": "number (in minutes)",
+        "cooking_time": "number (in minutes)",
         "servings": "string",
         "ingredients": [
           {"item": "string", "quantity": "string"}
@@ -94,15 +91,9 @@ export async function POST(request: Request) {
       .from('recipes')
       .insert([
         {
-          title: recipeData.title,
-          description: recipeData.description,
-          prep_time: recipeData.prep_time,
-          cook_time: recipeData.cook_time,
-          servings: recipeData.servings,
-          ingredients: recipeData.ingredients,
-          instructions: recipeData.instructions,
-          tips: recipeData.tips,
+          ...recipeData,
           slug,
+          // Corrigido: 'category_id' foi removido
           author_id: 'd9b73b5e-9a9c-4c7b-9d4a-1e3f8c2b0e1a', // Hardcoded author_id
           published_at: new Date().toISOString(),
           images: [{ url: '/recipe-card.png', alt: recipeData.title }],
