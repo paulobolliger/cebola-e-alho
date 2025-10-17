@@ -14,17 +14,17 @@ export default function Header() {
         </div>
 
         {/* Main Header */}
-        <div className="flex justify-between items-center py-4 px-4">
+        <div className="flex justify-between items-center h-24 px-4">
           {/* Logo + Nome */}
           <Link href="/" className="flex items-center gap-3 group transition-all hover:scale-105">
-            <div className="relative">
+            <div className="relative h-22 w-22">
               <Image
                 src="https://res.cloudinary.com/dhqvjxgue/image/upload/v1760212377/logo-ceboela-e-alho-2_nawzzg.png"
                 alt="Cebola & Alho"
-                width={56}
-                height={56}
+                fill
+                sizes="88px"
                 priority={true}
-                className="drop-shadow-lg"
+                className="object-contain drop-shadow-lg"
               />
               {/* Efeito de brilho no hover */}
               <div className="absolute inset-0 bg-accent/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
