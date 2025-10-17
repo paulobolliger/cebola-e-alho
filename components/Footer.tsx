@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -7,7 +8,16 @@ export default function Footer() {
     <footer className="bg-text-primary text-background p-8">
       <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
         {/* Coluna 1: Marca e Slogan */}
-        <div>
+        <div className="flex flex-col items-center md:items-start">
+          <div className="relative w-24 h-24 mb-4">
+            <Image
+              src="https://res.cloudinary.com/dhqvjxgue/image/upload/v1760212377/logo-ceboela-e-alho-2_nawzzg.png"
+              alt="Cebola & Alho Logo"
+              fill
+              className="object-contain"
+              sizes="96px"
+            />
+          </div>
           <h3 className="font-display font-bold text-2xl mb-2 text-white">
             Cebola & Alho
           </h3>
