@@ -2,34 +2,49 @@
 import RecipeCard from '@/components/RecipeCard';
 import { createSupabaseClient } from '@/lib/supabaseClient';
 import { RecipeForCard } from '@/types';
+import RecipeFilters from '@/components/RecipeFilters'; // Importa o novo componente
+
+type RecipesPageProps = {
+  searchParams: {
+    difficulty?: string;
+    prep_time?: string;
+  };
+};
 
 // Função para buscar a lista de receitas no Supabase
-async function getRecipes(): Promise<RecipeForCard[]> {
+async function getRecipes(searchParams: RecipesPageProps['searchParams']): Promise<RecipeForCard[]> {
   const supabase = createSupabaseClient();
   
-  // Selecionando os campos necessários para o card
-  const { data, error } = await supabase
+  let query = supabase
     .from('recipes')
-    .select('id, title, slug, excerpt, images, ingredients, prep_time, difficulty, rating, rating_count, description');
+    .select(`
+      id, title, slug, description, image_url, prep_time, difficulty,
+      average_rating, rating_count, ingredients_json
+    `);
+
+  // Aplica filtros dinamicamente
+  if (searchParams.difficulty) {
+    query = query.eq('difficulty', searchParams.difficulty);
+  }
+  if (searchParams.prep_time) {
+    query = query.lte('prep_time', parseInt(searchParams.prep_time, 10));
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching recipes:', error);
     return [];
   }
 
-  // Adicionando um fallback de imagem
-  return (data as RecipeForCard[]).map(recipe => ({
-    ...recipe,
-    images: recipe.images && recipe.images.length > 0 ? recipe.images : [{ url: '/recipe-card.png' }]
-  }));
+  return data as RecipeForCard[];
 }
 
 // Página de listagem de Receitas (listagem principal)
-export default async function RecipesPage() {
-  const recipes = await getRecipes();
+export default async function RecipesPage({ searchParams }: RecipesPageProps) {
+  const recipes = await getRecipes(searchParams);
 
   return (
-    // Removido 'bg-background' para herdar a cor do layout (CORREÇÃO para duplicação)
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-16">
         <section className="text-center mb-12">
@@ -42,40 +57,8 @@ export default async function RecipesPage() {
           </p>
         </section>
 
-        <div className="mb-12">
-          <div className="max-w-2xl mx-auto">
-            <div className="relative">
-              <input
-                type="search"
-                placeholder="Buscar por nome ou ingrediente..."
-                className="w-full p-4 pr-12 text-text-primary bg-surface border border-border rounded-full shadow-sm focus:ring-2 focus:ring-primary focus:outline-none"
-              />
-              <svg
-                className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-text-tertiary"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
-            <div className="flex items-center justify-center gap-4 mt-4">
-              <span className="text-sm font-medium text-text-secondary">Categorias:</span>
-              <div className="flex gap-2">
-                <button className="px-4 py-2 text-sm bg-primary-light text-primary rounded-full hover:bg-primary hover:text-white transition-colors">Todos</button>
-                <button className="px-4 py-2 text-sm bg-surface text-text-secondary rounded-full hover:bg-gray-200 transition-colors">Sopas</button>
-                <button className="px-4 py-2 text-sm bg-surface text-text-secondary rounded-full hover:bg-gray-200 transition-colors">Saladas</button>
-                <button className="px-4 py-2 text-sm bg-surface text-text-secondary rounded-full hover:bg-gray-200 transition-colors">Sobremesas</button>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Adiciona o componente de filtros */}
+        <RecipeFilters />
 
         <section>
           {recipes.length > 0 ? (
