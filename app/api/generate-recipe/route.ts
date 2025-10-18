@@ -7,17 +7,15 @@ import slugify from 'slugify';
 import { createSupabaseClient } from '@/lib/supabaseClient'; 
 import { uploadImageToCloudinary } from '@/lib/cloudinary'; 
 import { createRealisticImagePrompt } from '@/lib/image-prompt'; 
-import { IngredientItem, InstructionStep } from '@/types/recipes'; // Importa os novos tipos
+import { IngredientItem, InstructionStep } from '@/types/recipes';
 
 // Inicializa clientes
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-// Este ID deve ser de um autor 'Food Guru' na sua tabela 'authors'
 const DEFAULT_AUTHOR_ID = 'd9b73b5e-9a9c-4c7b-9d4a-1e3f8c2b0e1a'; 
 
 // Zod schema para validação de entrada
 const recipeRequestSchema = z.object({
   ingredients: z.string().min(3, 'Os ingredientes devem ter pelo menos 3 caracteres.'),
-  // authorId virá da sessão do usuário na Parte D
   authorId: z.string().uuid().optional(), 
   isEditorial: z.boolean().default(false).optional(),
 });
@@ -33,8 +31,8 @@ interface RecipeData {
   cuisine: string;
   calories: number; 
   tags: string[]; 
-  ingredients: IngredientItem[]; // Usando o novo tipo
-  instructions: InstructionStep[]; // Usando o novo tipo
+  ingredients: IngredientItem[];
+  instructions: InstructionStep[];
 }
 
 const SYSTEM_PROMPT = `
@@ -62,11 +60,9 @@ const SYSTEM_PROMPT = `
   }
 `;
 
-
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    // Usa o cliente de server component (lib/supabaseClient)
     const supabase = createSupabaseClient(); 
     const validation = recipeRequestSchema.safeParse(body);
 
@@ -126,7 +122,6 @@ export async function POST(request: Request) {
     const cloudinaryResult = await uploadImageToCloudinary(imageBuffer, slug);
 
     // 5. Preparação dos Dados para o Supabase
-    // Define o autor: se for usuário autenticado (inputAuthorId), usa ele; senão, usa o Food Guru
     const author_id = inputAuthorId || DEFAULT_AUTHOR_ID; 
     const source = isEditorial ? 'editorial' : 'user';
 
@@ -142,10 +137,8 @@ export async function POST(request: Request) {
       cuisine: recipeData.cuisine,
       calories: recipeData.calories,
       tags: recipeData.tags,
-      // Salva os objetos JSONB
       ingredients_json: recipeData.ingredients, 
       instructions_json: recipeData.instructions, 
-      // Metadados da Imagem/AI
       image_url: cloudinaryResult.url,
       image_public_id: cloudinaryResult.publicId,
       image_prompt: imagePrompt,
@@ -153,12 +146,6 @@ export async function POST(request: Request) {
       image_ai_model: imageModelUsed,
       source: source,
       status: 'published',
-      // Campos de compatibilidade (para evitar erros em componentes antigos antes da Parte C)
-      image: cloudinaryResult.url, 
-      published: true,
-      ingredients: recipeData.ingredients.map(i => `${i.quantity} ${i.item}`), // Array simples para compatibilidade
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     };
 
     // 6. Salvamento no Supabase
@@ -170,11 +157,9 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error('Supabase error:', error);
-      // Inclui o slug para debug caso haja conflito de slug no banco
       throw new Error(`Failed to save recipe to database: ${error.message} (Slug: ${slug})`);
     }
 
-    // Retorno final para o cliente para RE-DIRECIONAR
     return NextResponse.json({ slug: newRecipe.slug, imageUrl: newRecipe.image_url }, { status: 201 });
 
   } catch (error) {

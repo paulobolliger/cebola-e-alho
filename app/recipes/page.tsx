@@ -2,12 +2,14 @@
 import RecipeCard from '@/components/RecipeCard';
 import { createSupabaseClient } from '@/lib/supabaseClient';
 import { RecipeForCard } from '@/types';
-import RecipeFilters from '@/components/RecipeFilters'; // Importa o novo componente
+import RecipeFilters from '@/components/RecipeFilters';
+import RecipeSearchBar from '@/components/RecipeSearchBar'; // Importa a barra de busca
 
 type RecipesPageProps = {
   searchParams: {
     difficulty?: string;
     prep_time?: string;
+    search?: string; // Adiciona o parâmetro de busca
   };
 };
 
@@ -28,6 +30,15 @@ async function getRecipes(searchParams: RecipesPageProps['searchParams']): Promi
   }
   if (searchParams.prep_time) {
     query = query.lte('prep_time', parseInt(searchParams.prep_time, 10));
+  }
+  if (searchParams.search) {
+    // Usando textSearch para busca de texto completo no título e descrição.
+    // O Supabase combina os campos em um único vetor tsvector nos bastidores.
+    // A configuração 'portuguese' melhora a busca para o idioma.
+    query = query.textSearch('fts', `'${searchParams.search}'`, {
+      type: 'websearch',
+      config: 'portuguese',
+    });
   }
 
   const { data, error } = await query.order('created_at', { ascending: false });
@@ -57,7 +68,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
           </p>
         </section>
 
-        {/* Adiciona o componente de filtros */}
+        <RecipeSearchBar />
         <RecipeFilters />
 
         <section>

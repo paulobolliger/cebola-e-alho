@@ -5,11 +5,10 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/components/Auth/AuthContextProvider'; // NOVO: Hook de Auth
+import { useAuth } from '@/components/Auth/AuthContextProvider';
 
 export default function HomePage() {
   const router = useRouter();
-  // ✅ CORREÇÃO: Pega o estado do usuário do contexto
   const { user, isLoading: isAuthLoading } = useAuth();
   
   const [ingredients, setIngredients] = useState('');
@@ -26,12 +25,11 @@ export default function HomePage() {
     setLoading(true);
     setError('');
     
-    // ✅ CORREÇÃO: Passa o UUID do usuário logado, se existir
     const authorId = user?.id; 
     
     const payload = { 
       ingredients,
-      authorId: authorId, // Será null se deslogado, e a API usará o DEFAULT_AUTHOR_ID
+      authorId: authorId,
     };
 
     try {
@@ -51,29 +49,48 @@ export default function HomePage() {
 
     } catch (e: any) {
       console.error(e);
-      // Mensagem de erro genérica. A API de back-end faz o trabalho pesado de autoria
       setError(e.message || 'Oops! Algo deu errado ao gerar a receita.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Desabilita o botão se estiver carregando a autenticação ou a receita
   const isDisabled = loading || isAuthLoading;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* ... (Seção HERO) ... */}
+      {/* Hero Section */}
+      <section className="relative text-center py-20 md:py-32 bg-gradient-to-b from-primary/10 to-transparent">
+        <div className="container mx-auto px-4 relative z-10">
+          <h1 className="font-display font-black text-5xl md:text-7xl text-text-primary mb-4">
+            Sua cozinha com um toque de <span className="text-primary">IA</span>
+          </h1>
+          <p className="text-lg md:text-xl text-text-secondary max-w-3xl mx-auto mb-8">
+            Transforme os ingredientes que você tem em casa em receitas incríveis.
+            Deixe nossa inteligência artificial ser seu novo chef de cozinha.
+          </p>
+          <a
+            href="#gerador"
+            className="bg-primary text-white font-display font-bold text-xl py-4 px-10 rounded-xl hover:bg-primary/90 focus:ring-4 focus:ring-accent/50 transition-all transform hover:scale-105 shadow-fire"
+          >
+            Começar a Criar
+          </a>
+        </div>
+      </section>
       
-      {/* 🎯 GERADOR DE RECEITAS */}
+      {/* Gerador de Receitas */}
       <section id="gerador" className="py-16 md:py-24 container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
-          {/* ... (título da seção) ... */}
+          <div className="text-center mb-12">
+            <h2 className="font-display font-bold text-4xl text-text-primary">Gerador de Receitas</h2>
+            <p className="text-text-secondary mt-2">É simples: diga o que tem na geladeira e a mágica acontece.</p>
+          </div>
 
           <div className="bg-surface p-8 md:p-10 rounded-2xl shadow-fire border-2 border-primary/20 relative overflow-hidden">
             <form onSubmit={handleSubmit} className="relative z-10">
-              {/* ... (label) ... */}
-
+              <label htmlFor="ingredients" className="block text-lg font-semibold text-text-primary mb-3">
+                Quais ingredientes você tem?
+              </label>
               <textarea
                 id="ingredients"
                 value={ingredients}
@@ -102,8 +119,6 @@ export default function HomePage() {
                     '🔥 Gerar Receita Agora'
                   )}
                 </button>
-
-                {/* ... (botão Limpar) ... */}
               </div>
 
               {error && (
@@ -112,7 +127,6 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* Mensagem se não estiver logado */}
               {!user && !isAuthLoading && (
                  <p className="mt-4 text-sm text-center text-text-secondary/80">
                    Receitas geradas por visitantes anônimos são atribuídas ao nosso &apos;Food Guru&apos;. Faça login para ter seu nome de autor na receita!
@@ -122,8 +136,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* ... (Demais seções) ... */}
     </div>
   );
 }
