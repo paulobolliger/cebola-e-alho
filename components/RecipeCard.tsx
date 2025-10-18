@@ -1,10 +1,10 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
-import { Recipe } from '@/types';
+import { RecipeForCard } from '@/types';
 
 interface RecipeCardProps {
-  recipe: Recipe;
+  recipe: RecipeForCard;
 }
 
 export default function RecipeCard({ recipe }: RecipeCardProps) {
@@ -61,7 +61,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
         {/* Imagem com Overlay de Tempo */}
         <div className="relative h-56 overflow-hidden">
           <Image
-            src={recipe.image || '/recipe-card.png'}
+            src={recipe.images && recipe.images.length > 0 ? recipe.images[0].url : '/recipe-card.png'}
             alt={recipe.title}
             fill
             className="object-cover group-hover:scale-110 transition-transform duration-500"
@@ -106,9 +106,9 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
           </h3>
 
           {/* Descrição */}
-          {recipe.description && (
+          {recipe.excerpt && (
             <p className="text-sm text-text-secondary mb-4 line-clamp-2 leading-relaxed">
-              {recipe.description}
+              {recipe.excerpt}
             </p>
           )}
 

@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { Post } from '../../types/post'
+import { Post } from '@/types'
 
 // usa lib/supabaseClient.ts se já existir; aqui exemplo standalone
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
