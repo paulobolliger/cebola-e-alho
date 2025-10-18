@@ -32,9 +32,17 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
     );
   };
 
-  // Renderiza estrelas de avaliação (mantido como está no seu código)
+  // Renderiza estrelas de avaliação
   const renderRating = () => {
-    if (!recipe.rating) return null;
+    // Usa average_rating e rating_count da nova estrutura
+    const rating = recipe.average_rating || 0;
+    const count = recipe.rating_count || 0;
+
+    if (count === 0) {
+      return (
+        <span className="text-xs text-text-secondary italic">Sem avaliações</span>
+      );
+    }
     
     return (
       <div className="flex items-center gap-1">
@@ -42,17 +50,15 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
           {[...Array(5)].map((_, i) => (
             <span 
               key={i}
-              className={`text-sm ${i < Math.floor(recipe.rating!) ? 'text-accent' : 'text-gray-300'}`}
+              className={`text-sm ${i < Math.floor(rating) ? 'text-accent' : 'text-gray-300'}`}
             >
               ⭐
             </span>
           ))}
         </div>
-        {recipe.rating_count && (
-          <span className="text-xs text-text-secondary">
-            ({recipe.rating_count})
-          </span>
-        )}
+        <span className="text-xs text-text-secondary">
+          ({count})
+        </span>
       </div>
     );
   };
@@ -129,9 +135,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
             {/* Avaliação */}
             <div className="flex flex-col items-end">
               <span className="text-xs text-text-secondary mb-1">Avaliação</span>
-              {renderRating() || (
-                <span className="text-xs text-text-secondary italic">Sem avaliações</span>
-              )}
+              {renderRating()}
             </div>
           </div>
 

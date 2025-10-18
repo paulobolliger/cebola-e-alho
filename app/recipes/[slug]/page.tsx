@@ -2,9 +2,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Image from "next/image";
-// Importa os novos tipos com as estruturas JSONB
-import { Recipe, IngredientItem, InstructionStep } from "@/types/recipes"; 
-import Script from "next/script"; // Importa o Script do Next.js para o JSON-LD
+import Script from "next/script";
+import { Recipe, IngredientItem, InstructionStep } from "@/types/recipes";
+import RatingSystem from "@/components/RatingSystem"; // Importa o novo componente
 
 type Props = {
   params: {
@@ -72,8 +72,13 @@ const RecipeJsonLd = ({ recipe, authorName, authorImageUrl }: {
     "recipeInstructions": recipeInstruction,
     "recipeCategory": recipe.cuisine,
     "keywords": recipe.tags?.join(', '),
-    // Você pode adicionar AggregateRating aqui quando implementar o sistema de avaliação.
-    // "aggregateRating": { ... }
+    ...(recipe.rating_count > 0 && {
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": recipe.average_rating,
+        "ratingCount": recipe.rating_count
+      }
+    })
   };
 
   return (
@@ -114,8 +119,11 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function RecipePage({ params }: Props) {
   const supabase = createClient();
-  
-  // ✅ Busca a receita E os dados do autor em um único SELECT com JOIN
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Busca a receita, os dados do autor e a avaliação do usuário logado
   const { data, error } = await supabase
     .from("recipes")
     .select(
@@ -132,22 +140,27 @@ export default async function RecipePage({ params }: Props) {
     notFound();
   }
 
-  // Cast para o tipo com o autor
+  let userRatingData: { rating: number } | null = null;
+  if (user) {
+    const { data: rating } = await supabase
+      .from("ratings")
+      .select("rating")
+      .eq("recipe_id", data.id)
+      .eq("author_id", user.id)
+      .single();
+    userRatingData = rating;
+  }
+
   const recipeData = data as RecipeWithAuthor;
   const recipe = data as Recipe;
-
-  // Dados do Autor para o Schema e exibição
   const authorName = recipeData.authors?.name || "Food Guru (IA)";
   const authorImageUrl = recipeData.authors?.avatar_url || null;
-
   const imageUrl = recipe.image_url || '/recipe-card.png';
   const prepTime = recipe.prep_time || 0;
   const cookTime = recipe.cook_time || 0;
 
-
   return (
     <>
-      {/* ✅ NOVO: Inclui o JSON-LD no topo do componente */}
       <RecipeJsonLd 
         recipe={recipe} 
         authorName={authorName}
@@ -173,25 +186,30 @@ export default async function RecipePage({ params }: Props) {
               {recipe.title}
             </h1>
             
-            {/* NOVO: Exibição do Autor (Parte D) */}
             <div className="flex items-center gap-3 mb-6">
-                {authorImageUrl ? (
-                    <Image src={authorImageUrl} alt={authorName} width={32} height={32} className="rounded-full object-cover" />
-                ) : (
-                    // Fallback visual
-                    <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-xs font-semibold">
-                        {authorName[0]}
-                    </div>
-                )}
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                    Por <strong className="text-primary">{authorName}</strong>
-                </span>
+              {authorImageUrl ? (
+                <Image src={authorImageUrl} alt={authorName} width={32} height={32} className="rounded-full object-cover" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-xs font-semibold">
+                  {authorName[0]}
+                </div>
+              )}
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                Por <strong className="text-primary">{authorName}</strong>
+              </span>
             </div>
-
 
             <p className="text-gray-600 dark:text-gray-400 mb-6">
               {recipe.description}
             </p>
+
+            {/* Sistema de Avaliação */}
+            <RatingSystem
+              recipeId={recipe.id}
+              initialAverageRating={recipe.average_rating}
+              initialRatingCount={recipe.rating_count}
+              initialUserRating={userRatingData?.rating || null}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               {/* Usando prep_time (number) */}

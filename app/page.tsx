@@ -115,7 +115,7 @@ export default function HomePage() {
               {/* Mensagem se não estiver logado */}
               {!user && !isAuthLoading && (
                  <p className="mt-4 text-sm text-center text-text-secondary/80">
-                   Receitas geradas por visitantes anônimos são atribuídas ao nosso "Food Guru". Faça login para ter seu nome de autor na receita!
+                   Receitas geradas por visitantes anônimos são atribuídas ao nosso &apos;Food Guru&apos;. Faça login para ter seu nome de autor na receita!
                  </p>
               )}
             </form>

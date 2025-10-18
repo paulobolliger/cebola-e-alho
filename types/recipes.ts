@@ -41,8 +41,8 @@ export type Recipe = {
   author_id: string; // Chave estrangeira para a próxima etapa (Parte D)
   source: 'user' | 'editorial';
   status: 'draft' | 'published' | 'blocked';
-  rating?: number;
-  rating_count?: number;
+  average_rating: number;
+  rating_count: number;
 
   created_at: string;
   updated_at: string;
@@ -67,6 +67,6 @@ export type RecipeForCard = {
   
   prep_time: number;
   difficulty: 'Fácil' | 'Média' | 'Difícil';
-  rating?: number;
-  rating_count?: number;
+  average_rating: number;
+  rating_count: number;
 };
