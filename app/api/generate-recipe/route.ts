@@ -1,84 +1,132 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { z } from 'zod';
+import fs from 'fs';
+import path from 'path';
+import slugify from 'slugify';
 
-// 1. Inicializa o cliente da OpenAI com a chave do .env
+// Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// 2. Define um esquema para validar a entrada
+// Zod schema for input validation
 const recipeRequestSchema = z.object({
   ingredients: z.string().min(3, 'Os ingredientes devem ter pelo menos 3 caracteres.'),
 });
 
-export async function POST(req: NextRequest) {
-  // Valida se a chave da API existe no ambiente
-  if (!process.env.OPENAI_API_KEY) {
-    console.error('OPENAI_API_KEY is not set.');
-    return NextResponse.json(
-      { error: 'A configuração do servidor está incompleta para gerar receitas.' },
-      { status: 500 },
-    );
+// Define the expected JSON structure from OpenAI
+interface RecipeData {
+  title: string;
+  description: string;
+  prep_time: number;
+  cook_time: number;
+  servings: string;
+  ingredients: { item: string; quantity: string }[];
+  instructions: { step: number; description: string }[];
+  tips: string[];
+}
+
+// Function to format the recipe data into a Markdown string
+function formatRecipeToMarkdown(recipe: RecipeData): string {
+  let markdown = `# ${recipe.title}\n\n`;
+  markdown += `${recipe.description}\n\n`;
+  markdown += `**Tempo de Preparo:** ${recipe.prep_time} minutos\n`;
+  markdown += `**Tempo de Cozimento:** ${recipe.cook_time} minutos\n`;
+  markdown += `**Rendimento:** ${recipe.servings}\n\n`;
+
+  markdown += `## Ingredientes\n`;
+  recipe.ingredients.forEach(ing => {
+    markdown += `- **${ing.quantity}** ${ing.item}\n`;
+  });
+  markdown += `\n`;
+
+  markdown += `## Instruções\n`;
+  recipe.instructions.forEach(inst => {
+    markdown += `${inst.step}. ${inst.description}\n`;
+  });
+  markdown += `\n`;
+
+  if (recipe.tips && recipe.tips.length > 0) {
+    markdown += `## Dicas do Chef\n`;
+    recipe.tips.forEach(tip => {
+      markdown += `- ${tip}\n`;
+    });
   }
 
+  return markdown;
+}
+
+
+export async function POST(request: Request) {
   try {
-    const body = await req.json();
+    const body = await request.json();
 
-    // 3. Valida os dados recebidos do frontend
-    const validationResult = recipeRequestSchema.safeParse(body);
-    if (!validationResult.success) {
-      return NextResponse.json(
-        { error: 'Entrada inválida.', details: validationResult.error.errors },
-        { status: 400 },
-      );
+    // Validate input using Zod
+    const validation = recipeRequestSchema.safeParse(body);
+
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error.issues[0].message }, { status: 400 });
     }
-    const { ingredients } = validationResult.data;
 
-    // 4. Cria um prompt detalhado para a IA (Prompt Engineering)
-    const prompt = `
-      Você é um assistente culinário especialista chamado "Cebola & Alho". Seu tom de voz é o de um "Chef Amigo": caloroso, acessível e inspirador.
-      Sua principal tarefa é criar uma receita deliciosa e prática usando principalmente os seguintes ingredientes: ${ingredients}.
-      Você pode adicionar ingredientes básicos como sal, pimenta, azeite, água, etc., se julgar necessário.
+    const { ingredients } = validation.data;
 
-      Por favor, estruture sua resposta **exclusivamente em Markdown** da seguinte forma:
-
-      # [Nome Criativo e Saboroso para a Receita]
-
-      ## Ingredientes
-      - [Ingrediente 1]
-      - [Ingrediente 2]
-      - [Etc...]
-
-      ## Modo de Preparo
-      1. [Primeiro passo, claro e direto]
-      2. [Segundo passo]
-      3. [Continue com os passos necessários]
-
-      ## Dica do Chef
-      - [Ofereça uma dica ou sugestão para variar o prato, uma técnica especial ou uma sugestão de harmonização]
+    const systemPrompt = `
+      You are a world-class culinary expert assistant named "Cebola & Alho". Your tone is that of a "Friendly Chef": warm, inspiring, and accessible.
+      Your main task is to create a delicious and practical recipe based on the user's ingredients: "${ingredients}".
+      You must return the response exclusively in a valid JSON object, following the specified schema.
+      Do not include any introductory text.
+      The JSON schema is:
+      {
+        "title": "string",
+        "description": "string",
+        "prep_time": "number (in minutes)",
+        "cook_time": "number (in minutes)",
+        "servings": "string",
+        "ingredients": [{"item": "string", "quantity": "string"}],
+        "instructions": [{"step": "number", "description": "string"}],
+        "tips": ["string"]
+      }
     `;
 
-    // 5. Chama a API da OpenAI
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7, // Um pouco de criatividade
-      max_tokens: 600,  // Espaço suficiente para uma boa receita
+    // Call OpenAI API
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [{ role: 'system', content: systemPrompt }],
+      temperature: 0.7,
+      response_format: { type: 'json_object' },
     });
 
-    const recipe = completion.choices[0]?.message?.content?.trim() ?? '';
+    const content = response.choices[0]?.message?.content;
 
-    if (!recipe) {
-      throw new Error('A IA não retornou uma receita válida.');
+    if (!content) {
+      throw new Error('No content received from OpenAI');
     }
 
-    return NextResponse.json({ recipe });
+    const recipeData: RecipeData = JSON.parse(content);
+
+    // --- Save recipe to local file ---
+    const slug = slugify(recipeData.title, { lower: true, strict: true });
+    const dirPath = path.join(process.cwd(), 'receitas-geradas');
+    const filePath = path.join(dirPath, `${slug}.json`);
+
+    // Ensure directory exists
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+
+    // Write the JSON file
+    fs.writeFileSync(filePath, JSON.stringify(recipeData, null, 2));
+
+    // --- Format recipe to Markdown for frontend ---
+    const markdownRecipe = formatRecipeToMarkdown(recipeData);
+
+    // Return the formatted recipe to be displayed on the page
+    return NextResponse.json({ recipe: markdownRecipe }, { status: 200 });
+
   } catch (error) {
-    console.error('Error calling OpenAI API:', error);
-    return NextResponse.json(
-      { error: 'Não foi possível gerar a receita no momento. Tente novamente mais tarde.' },
-      { status: 500 },
-    );
+    console.error('API Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+    return NextResponse.json({ error: 'Failed to generate recipe.', details: errorMessage }, { status: 500 });
   }
 }
