@@ -1,16 +1,16 @@
 // app/recipes/page.tsx
 import RecipeCard from '@/components/RecipeCard';
 import { createSupabaseClient } from '@/lib/supabaseClient';
-import { Recipe } from '@/types';
+import { RecipeForCard } from '@/types';
 
 // Função para buscar a lista de receitas no Supabase
-async function getRecipes() {
+async function getRecipes(): Promise<RecipeForCard[]> {
   const supabase = createSupabaseClient();
   
   // Selecionando os campos necessários para o card
   const { data, error } = await supabase
     .from('recipes')
-    .select('id, title, slug, excerpt, images, ingredients');
+    .select('id, title, slug, excerpt, images, ingredients, prep_time, difficulty, rating, rating_count, description');
 
   if (error) {
     console.error('Error fetching recipes:', error);
@@ -18,7 +18,7 @@ async function getRecipes() {
   }
 
   // Adicionando um fallback de imagem
-  return (data as Recipe[]).map(recipe => ({
+  return (data as RecipeForCard[]).map(recipe => ({
     ...recipe,
     images: recipe.images && recipe.images.length > 0 ? recipe.images : [{ url: '/recipe-card.png' }]
   }));

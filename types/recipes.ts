@@ -17,3 +17,17 @@ export type Recipe = {
   author_id: string;
   category_id: string;
 };
+
+export type RecipeForCard = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  images: { url: string; alt?: string }[];
+  ingredients: string[];
+  prep_time?: number;
+  difficulty?: 'Fácil' | 'Média' | 'Difícil';
+  rating?: number;
+  rating_count?: number;
+  description?: string;
+};
