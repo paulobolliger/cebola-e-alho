@@ -3,11 +3,11 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { MobileMenu } from './MobileMenu';
-import { useAuth } from '@/components/Auth/AuthContextProvider'; // NOVO: Hook de Auth
+import MobileMenu from './MobileMenu'; // CORREÇÃO: Importação padrão
+import { useAuth } from '@/components/Auth/AuthContextProvider';
 import { useRouter } from 'next/navigation';
 
-export function Header() {
+export default function Header() { // CORREÇÃO: Exportação padrão
   const { user, supabase } = useAuth();
   const router = useRouter();
 
