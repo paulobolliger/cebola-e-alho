@@ -1,97 +1,48 @@
 // app/api/generate-recipe/route.ts
 
-// Ações:
-// 1. Geração de Receita: gpt-5-mini (texto)
-// 2. Geração de Imagem: gpt-image-1-mini (visual)
-// 3. Upload: Cloudinary
-// 4. Persistência: Supabase (JSONB + URL)
-
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { z } from 'zod';
-<<<<<<< Updated upstream
-import fs from 'fs';
-import path from 'path';
-=======
->>>>>>> Stashed changes
 import slugify from 'slugify';
-import { createSupabaseClient } from '@/lib/supabaseClient'; // Usa a lib existente
-import { uploadImageToCloudinary } from '@/lib/cloudinary'; // Nova lib
-import { createRealisticImagePrompt } from '@/lib/image-prompt'; // Nova lib
+import { createSupabaseClient } from '@/lib/supabaseClient'; 
+import { uploadImageToCloudinary } from '@/lib/cloudinary'; 
+import { createRealisticImagePrompt } from '@/lib/image-prompt'; 
+import { IngredientItem, InstructionStep } from '@/types/recipes'; // Importa os novos tipos
 
 // Inicializa clientes
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const DEFAULT_AUTHOR_ID = 'd9b73b5e-9a9c-4c7b-9d4a-1e3f8c2b0e1a'; // Food Guru ID
+// Este ID deve ser de um autor 'Food Guru' na sua tabela 'authors'
+const DEFAULT_AUTHOR_ID = 'd9b73b5e-9a9c-4c7b-9d4a-1e3f8c2b0e1a'; 
 
-<<<<<<< Updated upstream
-// Zod schema for input validation
-=======
-// Zod schema para validação de entrada (agora aceita userId e isEditorial)
->>>>>>> Stashed changes
+// Zod schema para validação de entrada
 const recipeRequestSchema = z.object({
   ingredients: z.string().min(3, 'Os ingredientes devem ter pelo menos 3 caracteres.'),
-  authorId: z.string().uuid().optional(), // ID do usuário autenticado, se houver
-  isEditorial: z.boolean().default(false).optional(), // Para receitas de Python/Admin
+  // authorId virá da sessão do usuário na Parte D
+  authorId: z.string().uuid().optional(), 
+  isEditorial: z.boolean().default(false).optional(),
 });
 
-// Estrutura de saída do JSON (Mapeada para os campos da tabela recipes)
+// Estrutura de saída do JSON
 interface RecipeData {
   title: string;
   description: string;
-<<<<<<< Updated upstream
-  prep_time: number;
-  cook_time: number;
-=======
-  prep_time: number; // INTEGER
-  cook_time: number; // INTEGER
->>>>>>> Stashed changes
+  prep_time: number; 
+  cook_time: number; 
   servings: string;
   difficulty: 'Fácil' | 'Média' | 'Difícil';
   cuisine: string;
-  calories: number; // INTEGER
-  tags: string[]; // TEXT[]
-  ingredients: { item: string; quantity: string }[]; // JSONB -> ingredients_json
-  instructions: { step: number; description: string }[]; // JSONB -> instructions_json
+  calories: number; 
+  tags: string[]; 
+  ingredients: IngredientItem[]; // Usando o novo tipo
+  instructions: InstructionStep[]; // Usando o novo tipo
 }
 
-<<<<<<< Updated upstream
-// Function to format the recipe data into a Markdown string
-function formatRecipeToMarkdown(recipe: RecipeData): string {
-  let markdown = `# ${recipe.title}\n\n`;
-  markdown += `${recipe.description}\n\n`;
-  markdown += `**Tempo de Preparo:** ${recipe.prep_time} minutos\n`;
-  markdown += `**Tempo de Cozimento:** ${recipe.cook_time} minutos\n`;
-  markdown += `**Rendimento:** ${recipe.servings}\n\n`;
-
-  markdown += `## Ingredientes\n`;
-  recipe.ingredients.forEach(ing => {
-    markdown += `- **${ing.quantity}** ${ing.item}\n`;
-  });
-  markdown += `\n`;
-
-  markdown += `## Instruções\n`;
-  recipe.instructions.forEach(inst => {
-    markdown += `${inst.step}. ${inst.description}\n`;
-  });
-  markdown += `\n`;
-
-  if (recipe.tips && recipe.tips.length > 0) {
-    markdown += `## Dicas do Chef\n`;
-    recipe.tips.forEach(tip => {
-      markdown += `- ${tip}\n`;
-    });
-  }
-
-  return markdown;
-}
-=======
-// System Prompt otimizado para extração de JSON com mais metadados
 const SYSTEM_PROMPT = `
   You are a world-class culinary expert assistant named "Cebola & Alho". Your tone is that of a "Friendly Chef": warm, inspiring, and accessible.
   Your main task is to create a complete, delicious, and practical recipe based on the user's ingredients.
   You MUST return the response exclusively in a valid JSON object, following the specified schema exactly.
   Do not include any introductory text like "Here is the recipe".
-  Ensure 'prep_time', 'cook_time' and 'calories' are numbers (in minutes/kcal).
+  Ensure 'prep_time', 'cook_time' and 'calories' are NUMBERS (in minutes/kcal).
   The recipe should be creative but achievable for a home cook.
   
   The JSON schema is:
@@ -109,62 +60,30 @@ const SYSTEM_PROMPT = `
     "instructions": [{"step": "number", "description": "string"}]
   }
 `;
->>>>>>> Stashed changes
 
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-<<<<<<< Updated upstream
-
-    // Validate input using Zod
-=======
+    // Usa o cliente de server component (lib/supabaseClient)
     const supabase = createSupabaseClient(); 
->>>>>>> Stashed changes
     const validation = recipeRequestSchema.safeParse(body);
 
     if (!validation.success) {
       return NextResponse.json({ error: validation.error.issues[0].message }, { status: 400 });
     }
 
-<<<<<<< Updated upstream
-    const { ingredients } = validation.data;
-
-    const systemPrompt = `
-      You are a world-class culinary expert assistant named "Cebola & Alho". Your tone is that of a "Friendly Chef": warm, inspiring, and accessible.
-      Your main task is to create a delicious and practical recipe based on the user's ingredients: "${ingredients}".
-      You must return the response exclusively in a valid JSON object, following the specified schema.
-      Do not include any introductory text.
-      The JSON schema is:
-      {
-        "title": "string",
-        "description": "string",
-        "prep_time": "number (in minutes)",
-        "cook_time": "number (in minutes)",
-        "servings": "string",
-        "ingredients": [{"item": "string", "quantity": "string"}],
-        "instructions": [{"step": "number", "description": "string"}],
-        "tips": ["string"]
-      }
-    `;
-
-    // Call OpenAI API
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [{ role: 'system', content: systemPrompt }],
-=======
     const { ingredients, authorId: inputAuthorId, isEditorial } = validation.data;
     const modelUsed = 'gpt-5-mini';
     const imageModelUsed = 'gpt-image-1-mini';
     
-    // 1. Geração da Receita (GPT-5-mini - o texto)
+    // 1. Geração da Receita (GPT-5-mini)
     const recipeResponse = await openai.chat.completions.create({
       model: modelUsed, 
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: `Crie uma receita usando os seguintes ingredientes: ${ingredients}` }
       ],
->>>>>>> Stashed changes
       temperature: 0.7,
       response_format: { type: 'json_object' },
       max_tokens: 1500, 
@@ -176,42 +95,21 @@ export async function POST(request: Request) {
     }
 
     const recipeData: RecipeData = JSON.parse(content);
-<<<<<<< Updated upstream
-
-    // --- Save recipe to local file ---
-    const slug = slugify(recipeData.title, { lower: true, strict: true });
-    const dirPath = path.join(process.cwd(), 'receitas-geradas');
-    const filePath = path.join(dirPath, `${slug}.json`);
-
-    // Ensure directory exists
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true });
-    }
-
-    // Write the JSON file
-    fs.writeFileSync(filePath, JSON.stringify(recipeData, null, 2));
-
-    // --- Format recipe to Markdown for frontend ---
-    const markdownRecipe = formatRecipeToMarkdown(recipeData);
-
-    // Return the formatted recipe to be displayed on the page
-    return NextResponse.json({ recipe: markdownRecipe }, { status: 200 });
-=======
     const slug = slugify(recipeData.title, { lower: true, strict: true });
     
-    // 2. Geração do Prompt de Imagem (baseado na receita)
+    // 2. Geração do Prompt de Imagem
     const { prompt: imagePrompt } = createRealisticImagePrompt(
       recipeData.title,
       recipeData.ingredients.map(i => i.item)
     );
 
-    // 3. Geração da Imagem (GPT-image-1-mini - a imagem realista)
+    // 3. Geração da Imagem (GPT-image-1-mini)
     const imageResponse = await openai.images.generate({
       model: imageModelUsed, 
       prompt: imagePrompt,
       n: 1,
-      size: '1024x768', // Formato 4:3 confirmado
-      response_format: 'b64_json', // Para upload direto
+      size: '1024x768', 
+      response_format: 'b64_json', 
       style: 'vivid',
       quality: 'standard',
     });
@@ -227,6 +125,7 @@ export async function POST(request: Request) {
     const cloudinaryResult = await uploadImageToCloudinary(imageBuffer, slug);
 
     // 5. Preparação dos Dados para o Supabase
+    // Define o autor: se for usuário autenticado (inputAuthorId), usa ele; senão, usa o Food Guru
     const author_id = inputAuthorId || DEFAULT_AUTHOR_ID; 
     const source = isEditorial ? 'editorial' : 'user';
 
@@ -242,9 +141,10 @@ export async function POST(request: Request) {
       cuisine: recipeData.cuisine,
       calories: recipeData.calories,
       tags: recipeData.tags,
+      // Salva os objetos JSONB
       ingredients_json: recipeData.ingredients, 
       instructions_json: recipeData.instructions, 
-      // Campos de Imagem e AI
+      // Metadados da Imagem/AI
       image_url: cloudinaryResult.url,
       image_public_id: cloudinaryResult.publicId,
       image_prompt: imagePrompt,
@@ -252,11 +152,10 @@ export async function POST(request: Request) {
       image_ai_model: imageModelUsed,
       source: source,
       status: 'published',
-      // Campos legados (para compatibilidade com o RecipeCard atual)
+      // Campos de compatibilidade (para evitar erros em componentes antigos antes da Parte C)
       image: cloudinaryResult.url, 
       published: true,
-      // Adicionando um array simples de ingredientes (opcional, para compatibilidade)
-      ingredients: recipeData.ingredients.map(i => `${i.quantity} ${i.item}`), 
+      ingredients: recipeData.ingredients.map(i => `${i.quantity} ${i.item}`), // Array simples para compatibilidade
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -265,17 +164,17 @@ export async function POST(request: Request) {
     const { data: newRecipe, error } = await supabase
       .from('recipes')
       .insert([recipeToSave])
-      .select('slug, image_url') // Retorna o slug e a URL para o frontend
+      .select('slug, image_url') 
       .single();
 
     if (error) {
       console.error('Supabase error:', error);
-      throw new Error(`Failed to save recipe to database: ${error.message}`);
+      // Inclui o slug para debug caso haja conflito de slug no banco
+      throw new Error(`Failed to save recipe to database: ${error.message} (Slug: ${slug})`);
     }
 
-    // Retorno final para o cliente
+    // Retorno final para o cliente para RE-DIRECIONAR
     return NextResponse.json({ slug: newRecipe.slug, imageUrl: newRecipe.image_url }, { status: 201 });
->>>>>>> Stashed changes
 
   } catch (error) {
     console.error('API Error:', error);

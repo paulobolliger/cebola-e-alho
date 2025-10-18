@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
+// Usa a nova tipagem
 import { RecipeForCard } from '@/types';
 
 interface RecipeCardProps {
@@ -10,6 +11,7 @@ interface RecipeCardProps {
 export default function RecipeCard({ recipe }: RecipeCardProps) {
   // Renderiza ícones de chama baseado na dificuldade
   const renderDifficulty = () => {
+    // A dificuldade é baseada no campo 'difficulty' ou 'Média'
     const flames = {
       'Fácil': 1,
       'Média': 2,
@@ -30,7 +32,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
     );
   };
 
-  // Renderiza estrelas de avaliação
+  // Renderiza estrelas de avaliação (mantido como está no seu código)
   const renderRating = () => {
     if (!recipe.rating) return null;
     
@@ -55,13 +57,18 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
     );
   };
 
+  // ✅ CORREÇÃO: Usar recipe.image_url
+  const imageUrl = recipe.image_url || '/recipe-card.png';
+  // ✅ CORREÇÃO: Usar recipe.ingredients_json.length
+  const ingredientCount = recipe.ingredients_json?.length || 0;
+
   return (
     <article className="group bg-surface rounded-2xl shadow-card hover:shadow-fire overflow-hidden transition-all duration-300 hover:scale-[1.02] border border-border">
       <Link href={`/recipes/${recipe.slug}`}>
         {/* Imagem com Overlay de Tempo */}
         <div className="relative h-56 overflow-hidden">
           <Image
-            src={recipe.images && recipe.images.length > 0 ? recipe.images[0].url : '/recipe-card.png'}
+            src={imageUrl}
             alt={recipe.title}
             fill
             className="object-cover group-hover:scale-110 transition-transform duration-500"
@@ -82,17 +89,16 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
           )}
 
           {/* Badge "NOVO" (pode adicionar lógica baseada em created_at) */}
-          {/* Exemplo: Se criado nos últimos 7 dias */}
           <div className="absolute top-3 left-3 bg-primary text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-md">
             🔥 Novo
           </div>
 
           {/* Badge de Ingredientes */}
-          {recipe.ingredients && (
+          {ingredientCount > 0 && (
             <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-md">
               <span className="text-xs">🍲</span>
               <span className="text-xs font-bold text-text-primary">
-                {recipe.ingredients.length} ingredientes
+                {ingredientCount} ingredientes
               </span>
             </div>
           )}
@@ -105,10 +111,10 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
             {recipe.title}
           </h3>
 
-          {/* Descrição */}
-          {recipe.excerpt && (
+          {/* Descrição - Usando 'description' do novo tipo */}
+          {recipe.description && (
             <p className="text-sm text-text-secondary mb-4 line-clamp-2 leading-relaxed">
-              {recipe.excerpt}
+              {recipe.description}
             </p>
           )}
 
@@ -140,13 +146,12 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
             <button
               onClick={(e) => {
                 e.preventDefault(); // Previne navegação
-                // TODO: Implementar lógica de favoritar
                 console.log('Favoritar receita:', recipe.id);
               }}
               className="p-2 rounded-full hover:bg-accent/10 transition-colors"
               aria-label="Salvar receita"
             >
-              <span className="text-xl">🤍</span> {/* Trocar para ❤️ se favoritado */}
+              <span className="text-xl">🤍</span> 
             </button>
           </div>
         </div>
