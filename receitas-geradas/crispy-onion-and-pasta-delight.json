@@ -1,0 +1,68 @@
+{
+  "title": "Crispy Onion and Pasta Delight",
+  "description": "A delightful pasta dish with a crispy onion topping, perfect for a quick and satisfying meal.",
+  "prep_time": 10,
+  "cook_time": 20,
+  "servings": "2",
+  "ingredients": [
+    {
+      "item": "Macarrão",
+      "quantity": "200g"
+    },
+    {
+      "item": "Cebola",
+      "quantity": "1 large, thinly sliced"
+    },
+    {
+      "item": "Farinha de trigo",
+      "quantity": "2 tablespoons"
+    },
+    {
+      "item": "Azeite",
+      "quantity": "2 tablespoons"
+    },
+    {
+      "item": "Sal",
+      "quantity": "to taste"
+    },
+    {
+      "item": "Pimenta do reino",
+      "quantity": "to taste"
+    },
+    {
+      "item": "Queijo parmesão ralado",
+      "quantity": "optional, for serving"
+    }
+  ],
+  "instructions": [
+    {
+      "step": 1,
+      "description": "Cook the macarrão according to package instructions until al dente. Drain and set aside."
+    },
+    {
+      "step": 2,
+      "description": "In a bowl, toss the sliced cebola with the farinha de trigo until well coated."
+    },
+    {
+      "step": 3,
+      "description": "Heat the azeite in a pan over medium heat. Add the coated cebola and fry until golden and crispy, about 5-7 minutes."
+    },
+    {
+      "step": 4,
+      "description": "Remove the crispy cebola from the pan and drain on paper towels. Season with salt and pimenta do reino."
+    },
+    {
+      "step": 5,
+      "description": "In the same pan, add the cooked macarrão. Toss to coat with any remaining oil and season with salt and pimenta do reino as desired."
+    },
+    {
+      "step": 6,
+      "description": "Serve the macarrão topped with the crispy cebola and a sprinkle of queijo parmesão ralado, if using."
+    }
+  ],
+  "tips": [
+    "For extra flavor, add a pinch of garlic powder to the flour before coating the onions.",
+    "Try adding some fresh herbs like parsley or basil for a fresh touch.",
+    "You can substitute whole wheat pasta for a healthier option."
+  ]
+}
