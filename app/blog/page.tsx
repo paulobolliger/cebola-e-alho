@@ -7,7 +7,12 @@ async function getPosts() {
   // A função createSupabaseClient já cuida das cookies e variáveis de ambiente
   const supabase = createSupabaseClient(); 
 
-  const { data, error } = await supabase.from('posts').select('*');
+  // CORREÇÃO: Filtra por status 'published' e ordena por data
+  const { data, error } = await supabase
+    .from('posts')
+    .select('*')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching posts:', error);

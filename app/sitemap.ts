@@ -17,10 +17,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createSupabaseClient();
 
   // 1. Obter slugs do Blog (posts)
-  // Selecionamos 'slug' e 'created_at' para usar no <loc> e <lastmod>
+  // Selecionamos 'slug' e 'published_at' para usar no <loc> e <lastmod>
   const { data: blogPosts, error: postsError } = await supabase
     .from('posts')
-    .select('slug, created_at');
+    .select('slug, published_at');
 
   if (postsError) {
     console.error('Error fetching blog post slugs for sitemap:', postsError);
@@ -39,10 +39,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   // Mapeamento de rotas dinâmicas do Blog
-  const blogRoutes: MetadataRoute.Sitemap = (blogPosts || []).map((post: Partial<Post>) => ({
+  const blogRoutes: MetadataRoute.Sitemap = (blogPosts || []).map((post: {slug: string; published_at: string}) => ({
     url: `${BASE_URL}/blog/${post.slug}`,
-    // Converte created_at para o formato ISO 8601 exigido pelo sitemap
-    lastModified: post.created_at ? new Date(post.created_at).toISOString() : new Date().toISOString(),
+    // Converte published_at para o formato ISO 8601 exigido pelo sitemap
+    lastModified: post.published_at ? new Date(post.published_at).toISOString() : new Date().toISOString(),
     changeFrequency: 'weekly',
     priority: 0.8,
   }));

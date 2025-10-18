@@ -15,7 +15,7 @@ const BlogCard = ({ post }: BlogCardProps) => {
     >
       <div className="relative h-48 w-full">
         <Image
-          src={post.image_url || "/blog-card.png"}
+          src={post.images && post.images.length > 0 ? post.images[0].url : "/blog-card.png"}
           alt={`Imagem do post ${post.title}`}
           layout="fill"
           objectFit="cover"
@@ -26,7 +26,7 @@ const BlogCard = ({ post }: BlogCardProps) => {
           {post.title}
         </h3>
         <p className="text-gray-600 dark:text-gray-400 line-clamp-3">
-          {post.description}
+          {post.excerpt}
         </p>
       </div>
     </Link>

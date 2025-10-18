@@ -1,97 +1,96 @@
-'use client';
+// components/Header.tsx
+'use client' // Torna o componente cliente
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import MobileMenu from './MobileMenu';
+import { MobileMenu } from './MobileMenu';
+import { useAuth } from '@/components/Auth/AuthContextProvider'; // NOVO: Hook de Auth
+import { useRouter } from 'next/navigation';
 
-export default function Header() {
-  const [isScrolled, setIsScrolled] = useState(false);
+export function Header() {
+  const { user, supabase } = useAuth();
+  const router = useRouter();
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
+  // Função para lidar com o login via Google OAuth
+  const handleLogin = async () => {
+    // Redireciona para o `app/auth/callback/route.ts` após o login
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
 
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
+    if (error) {
+      console.error('Erro ao fazer login:', error);
+      alert('Falha ao fazer login com Google.');
+    }
+  };
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Erro ao fazer logout:', error);
+    } else {
+      router.refresh(); // Atualiza a página para refletir o estado de logout
+    }
+  };
 
   return (
-    <header className="sticky top-0 z-50 border-b-2 border-primary/20 shadow-sm bg-surface/95 backdrop-blur-sm">
-      
-      {/* Barra superior fixa */}
-      <div className="bg-gradient-fire py-2 text-center">
-        <p className="text-white text-sm font-display font-bold">
-          ✨ Novo: Gere receitas ilimitadas com nossa IA! <span className="animate-pulse">🔥</span>
-        </p>
-      </div>
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border shadow-sm">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2">
+          <Image src="/logo.png" alt="Cebola & Alho Logo" width={32} height={32} />
+          <span className="font-display font-black text-xl text-primary hidden sm:inline">
+            Cebola & Alho
+          </span>
+        </Link>
 
-      {/* Container principal com altura fixa */}
-      <div className="container mx-auto h-24">
-        <div className="relative flex h-full items-center justify-between px-4">
-          
-          {/* LOGO CONTAINER */}
-          <div
-            className={`absolute top-1/2 -translate-y-1/2 left-4 transition-all duration-300 ease-in-out ${
-              isScrolled ? 'w-20 h-20' : 'w-[210px] h-[210px] top-16'
-            }`}
-          >
-            <Link href="/" className="group block h-full w-full">
-              {/*
-                AQUI ESTÁ A CORREÇÃO:
-                - Troquei 'rounded-10x3' por 'rounded-3xl' para um arredondamento grande e válido.
-                - 'overflow-hidden' garante que a imagem seja cortada pelas bordas arredondadas da caixa.
-              */}
-              <div
-                className={`relative h-full w-full overflow-hidden transition-all duration-300 ${
-                  isScrolled ? '' : 'bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg p-3'
-                }`}
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center space-x-6 font-semibold text-text-primary">
+          <Link href="/recipes" className="hover:text-primary transition-colors">
+            Receitas
+          </Link>
+          <Link href="/blog" className="hover:text-primary transition-colors">
+            Blog
+          </Link>
+          <Link href="/about" className="hover:text-primary transition-colors">
+            Sobre
+          </Link>
+          <Link href="/#gerador" className="text-white bg-primary px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+            Gerar Receita
+          </Link>
+
+          {/* Login/User Button - Lógica de Autenticação */}
+          {user ? (
+            <div className="ml-4 flex items-center gap-3">
+              <span className="text-sm text-text-secondary hidden lg:inline">
+                Olá, {user.email?.split('@')[0] || 'Usuário'}!
+              </span>
+              {/* ✅ Botão Sair */}
+              <button
+                onClick={handleLogout}
+                className="bg-accent text-white px-3 py-1.5 text-sm rounded-lg hover:bg-accent/90 transition-colors font-bold"
               >
-                <Image
-                  src="https://res.cloudinary.com/dhqvjxgue/image/upload/v1760212377/logo-ceboela-e-alho-2_nawzzg.png"
-                  alt="Cebola & Alho"
-                  fill
-                  sizes={isScrolled ? "80px" : "186px"}
-                  priority={true}
-                  className="object-contain drop-shadow-lg"
-                />
-                <div className="absolute inset-0 bg-accent/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              </div>
-            </Link>
-          </div>
-
-          {/* Navegação e botões à direita (mantendo sua última estrutura) */}
-          <div className="flex flex-1 items-center justify-end gap-1">
-            <nav className="hidden lg:flex items-center gap-1">
-              {[
-                { href: '/recipes', label: 'Receitas'},
-                { href: '/blog', label: 'Blog'},
-                { href: '/about', label: 'Sobre'},
-              ].map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-display font-bold text-base transition-all hover:scale-105 text-text-primary hover:text-primary hover:bg-primary/5"
-                >
-                  <span>{link.label}</span>
-                </Link>
-              ))}
-            </nav>
-
-            <div className="hidden md:block">
-              <Link
-                href="/#gerador"
-                className="bg-accent text-text-primary font-display font-bold px-6 py-3 rounded-lg hover:scale-105 transition-transform shadow-md"
-              >
-                🔥 Criar Receita
-              </Link>
+                Sair
+              </button>
             </div>
+          ) : (
+            // ✅ Botão Entrar
+            <button
+              onClick={handleLogin}
+              className="ml-4 bg-secondary text-white px-3 py-1.5 text-sm rounded-lg hover:bg-secondary/90 transition-colors font-bold"
+            >
+              Entrar
+            </button>
+          )}
 
-            <MobileMenu />
-          </div>
+        </nav>
+
+        {/* Mobile Menu Toggle */}
+        <div className="md:hidden">
+          <MobileMenu />
         </div>
       </div>
     </header>
